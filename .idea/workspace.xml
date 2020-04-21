@@ -16,7 +16,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="D:/My_Programms/Python" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -29,6 +29,7 @@
       <option name="presentableId" value="Default" />
       <updated>1585470830590</updated>
       <workItem from="1585470833456" duration="293000" />
+      <workItem from="1587406115795" duration="122000" />
     </task>
     <servers />
   </component>
@@ -40,6 +41,10 @@
       <screen x="0" y="0" width="1440" height="870" />
     </state>
     <state x="312" y="93" key="#Inspections/0.0.1440.870@0.0.1440.870" timestamp="1585471125520" />
+    <state x="500" y="190" key="FileChooserDialogImpl" timestamp="1587406237198">
+      <screen x="0" y="0" width="1440" height="870" />
+    </state>
+    <state x="500" y="190" key="FileChooserDialogImpl/0.0.1440.870@0.0.1440.870" timestamp="1587406237198" />
     <state x="416" y="33" width="607" height="804" key="find.popup" timestamp="1585471244085">
       <screen x="0" y="0" width="1440" height="870" />
     </state>
