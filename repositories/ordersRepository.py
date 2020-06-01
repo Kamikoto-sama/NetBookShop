@@ -1,21 +1,28 @@
-from models import Order
-from repositories.entityRepresentor import toEntity
-from repositories.dataBaseController import DataBaseController
+from typing import List
 
-class OrdersRepository(DataBaseController):
-	def __init__(self, db):
-		super().__init__(db)
-		self.__tableName = "orders"
+from dataBaseContext import Order, User, Book
 
-	def addOrder(self, order: Order):
-		values = (order.id, order.bookId, order.userId, order.date)
-		self._create(self.__tableName, values)
 
-	def getOrders(self, filterParams=None):
-		rawAuthors = self._read(self.__tableName, filterParams)
-		return toEntity(rawAuthors, Order)
+class OrdersRepository:
 
-	def deleteOrderById(self, orderId):
-		params = f"id={orderId!r}"
-		self._delete(self.__tableName, params)
-		
+	@staticmethod
+	def addOrder(userId, bookId) -> Order:
+		order = Order.create(userId=userId, bookId=bookId)
+		return order
+
+	@staticmethod
+	def getUserOrders(userId) -> List[dict]:
+		user: User = User.select().where(User.id == userId).first()
+		orders = list(user.orders.select(Order.id, Book.name.alias("bookName"), User.login.alias("userName"), 
+										 Order.userId, Order.date).join(Book, on=(Order.bookId == Book.id))
+					  					.join(User, on=(Order.userId == User.id)).dicts())
+		return orders
+	
+	@staticmethod
+	def getAllOrders() -> List[dict]:
+		orders = list(Order.select().dicts())
+		return orders
+
+	@staticmethod
+	def deleteOrderById(orderId):
+		Order.delete_by_id(orderId)

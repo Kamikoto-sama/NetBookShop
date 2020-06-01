@@ -1,44 +1,6 @@
-from sys import modules
 from dataclasses import dataclass
+from json import JSONDecoder, JSONEncoder
 
-@dataclass
-class User:
-	login:str
-	password:str
-	role:str
-	id:int=None
-	
-@dataclass
-class Author:
-	name:str
-	birthDate:str
-	bio:str
-	id:int=None
-
-@dataclass
-class Order:
-	bookId:int
-	userId:int
-	date:str
-	id:int=None
-	
-@dataclass
-class Book:
-	name:str
-	genres:str
-	pageCount:int
-	authorId:int
-	publisherId:int
-	count:int
-	price:int
-	id:int=None
-	
-@dataclass
-class Publisher:
-	name:str
-	creationDate:str
-	id:int=None
-	
 class ClientInfo:
 	def __init__(self, rawClientInfo):
 		self.connection = rawClientInfo[0]
@@ -46,9 +8,63 @@ class ClientInfo:
 		self.ipAddress = rawAddress[0]
 		self.port = rawAddress[1]
 		self.fullAddress = f"{self.ipAddress}:{self.port}"
-
+		
 class Request:
-	def __init__(self, action, entityTypeName, rawEntity):
+	def __init__(self, controller, action, body:dict=None, syncDbChanges = False):
+		self.controller = controller
 		self.action = action
-		thisModule = modules[__name__]
-		self.entity = getattr(thisModule, entityTypeName)(**rawEntity)
+		self.body = body
+		self.syncDbChanges = syncDbChanges
+		
+	@staticmethod
+	def fromJson(requestJson):
+		jsonRequest = JSONDecoder().decode(requestJson)
+		controller = jsonRequest["controller"]
+		action = jsonRequest["action"]
+		body = jsonRequest["body"]
+		syncDbChanges = jsonRequest["syncDbChanges"]
+		return Request(controller, action, body, syncDbChanges)
+		
+	def toJson(self):
+		requestDict = {
+			"controller": self.controller,
+			"action": self.action,
+			"body": self.body,
+			"syncDbChanges": self.syncDbChanges
+		}
+		requestJson = JSONEncoder().encode(requestDict)
+		return requestJson
+		
+class Response:
+	def __init__(self, succeed: bool, message: str, body:dict=None):
+		self.body = body
+		self.message = message
+		self.succeed = succeed
+		
+	def toJson(self):
+		responseDict = {
+			"succeed": self.succeed,
+			"message": self.message,
+			"body": self.body
+		}
+		responseJson = JSONEncoder().encode(responseDict)
+		return responseJson
+
+	@staticmethod
+	def fromJson(responseJson):
+		jsonResponse = JSONDecoder().decode(responseJson)
+		body = jsonResponse["body"]
+		message = jsonResponse["message"]
+		succeed = jsonResponse["succeed"]
+		return Response(succeed, message, body)
+	
+class Role:
+	CUSTOMER = "customer"
+	LIBRARIAN = "librarian"
+	NONE = None
+	
+@dataclass
+class UserInfo:
+	id: int
+	login: str
+	role: str

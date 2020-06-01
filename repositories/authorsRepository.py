@@ -1,24 +1,26 @@
-from models import Author
-from repositories.entityRepresentor import toEntity
-from repositories.dataBaseController import DataBaseController
+from dataBaseContext import Author
 
-class AuthorsRepository(DataBaseController):
-	def __init__(self, db):
-		super().__init__(db)
-		self.__tableName = "authors"
-		
-	def addAuthor(self, author: Author):
-		values = (author.id, author.name, author.birthDate, author.bio)
-		self._create(self.__tableName, values)
 
-	def getAuthors(self, filterParams=None):
-		rawAuthors = self._read(self.__tableName, filterParams)
-		return toEntity(rawAuthors, Author)
-		
-	def updateAuthorById(self, authorId, updatedValues: dict):
-		params = f"id={authorId!r}"
-		self._update(self.__tableName, updatedValues, params)
-		
-	def deleteAuthorById(self, authorId):
-		params = f"id={authorId!r}"
-		self._delete(self.__tableName, params)
+class AuthorsRepository:
+	@staticmethod
+	def addAuthor(authorData: dict):
+		authorId = Author.create(**authorData)
+		author = list(Author.select().where(Author.id == authorId))[0]
+		return author
+
+	@staticmethod
+	def getAuthorsByName(authorName):
+		authors = Author.select().where(Author.name == authorName).dicts()
+		return list(authors)
+	
+	@staticmethod
+	def getAllAuthors():
+		return list(Author.select().dicts())
+
+	@staticmethod
+	def updateAuthorById(authorId, updatedValues: dict):
+		Author.update(**updatedValues).where(Author.id == authorId).execute()
+
+	@staticmethod
+	def deletePublisherById(publisherId):
+		Author.delete_by_id(publisherId)

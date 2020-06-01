@@ -6,7 +6,6 @@ class ServerTerminal(Thread):
 
 	def __init__(self, server):
 		super().__init__()
-		self.dbProvider = server.dbProvider
 		self.server = server
 		self.bindCommands()
 

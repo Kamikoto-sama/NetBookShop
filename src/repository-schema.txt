@@ -1,14 +1,17 @@
-Регистрация
--добавить пользователя
--найти пользователя
--удалить
-Клиент
--просмотр всех книг
--просмотр фильтром(поиск)
--заказ книги
-Библиотекарь
--книги: просмотреть, добавить, удалить, изменить
--просмотреть заказы
--удалить заказ
--авторы: просмотреть, добавить, удалить, изменить
--издательства : просмотреть, добавить, удалить, изменить
+Auth:
+-Users: CR
+User:
+-Books: R (filter)
+-Authors: R(filter)
+-Publish: R(filter)
+-Orders: CR(self)D
+Librarian:
+-Books: CR(filter)UD
+-Orders: D
+-Authors: CR(filter)UD
+-Publish: CR(filter)UD
+
+Filter:
+-Books: name, genre, author, publisher
+-Authors: name
+-Publisher: name

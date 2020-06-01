@@ -1,25 +1,31 @@
-from models import Book
-from repositories.entityRepresentor import toEntity
-from repositories.dataBaseController import DataBaseController
+from typing import List
 
-class BooksRepository(DataBaseController):
-	def __init__(self, db):
-		super().__init__(db)
-		self.__tableName = "books"
+from dataBaseContext import Book, Author, Publisher
 
-	def getBooks(self, filterParams=None):
-		rawBooks = self._read(self.__tableName, filterParams)
-		return toEntity(rawBooks, Book)
 
-	def addBook(self, book: Book):
-		values = (book.id, book.name, book.genres, book.pageCount, 
-				  book.authorId, book.publisherId, book.count, book.price)
-		self._create(self.__tableName, values)
+class BooksRepository:
 
-	def updateBookById(self, bookId, updatedValues: dict):
-		params = f"id={bookId!r}"
-		self._update(self.__tableName, updatedValues, params)
+	@staticmethod	
+	def getBooks(filterParams: dict) -> List[dict]:
+		query = Book.select(Book.id, Book.name, Book.genre, Book.pageCount,
+							Author.name.alias("author"), Publisher.name.alias("publisher"),
+							Book.count, Book.price).join(Author, on=(Book.author == Author.id))\
+							.join(Publisher, on=(Book.publisher == Publisher.id)).dicts()
+		if len(filterParams) == 0:
+			return list(query)
+		books = query.filter(**filterParams)
+		return list(books)
 
-	def deleteBookById(self, bookId):
-		params = f"id={bookId!r}"
-		self._delete(self.__tableName, params)
+	@staticmethod
+	def addBook(bookData: dict):
+		bookId = Book.create(**bookData).id
+		book = list(Book.select().where(Book.id == bookId).dicts())[0]
+		return book
+		
+	@staticmethod
+	def updateBookById(bookId, changes: dict):
+		Book.update(**changes).where(Book.id == bookId).execute()
+
+	@staticmethod
+	def deleteBookById(bookId):
+		Book.delete_by_id(bookId)

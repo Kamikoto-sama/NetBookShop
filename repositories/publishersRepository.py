@@ -1,25 +1,26 @@
-from models import Publisher
-from repositories.dataBaseController import DataBaseController
-from repositories.entityRepresentor import toEntity
+from dataBaseContext import Publisher
 
 
-class PublishersRepository(DataBaseController):
-	def __init__(self, db):
-		super().__init__(db)
-		self.__tableName = "publishers"
+class PublishersRepository:
+	@staticmethod
+	def addPublisher(publisherData: dict):
+		publisherId = Publisher.create(**publisherData).id
+		publisher = list(Publisher.select().where(Publisher.id == publisherId))[0]
+		return publisher
 
-	def addPublisher(self, publisher: Publisher):
-		values = (publisher.id, publisher.name, publisher.creationDate)
-		self._create(self.__tableName, values)
+	@staticmethod
+	def getPublishersByName(publisherName):
+		publishers = Publisher.select().where(Publisher.name == publisherName).dicts()
+		return list(publishers)
+	
+	@staticmethod
+	def getAllPublishers():
+		return list(Publisher.select().dicts())
 
-	def getPublisher(self, filterParams=None):
-		rawPublishers = self._read(self.__tableName, filterParams)
-		return toEntity(rawPublishers, Publisher)
+	@staticmethod
+	def updatePublisherById(publisherId, updatedValues: dict):
+		Publisher.update(**updatedValues).where(Publisher.id == publisherId).execute()
 
-	def updatePublisherById(self, publisherId, updatedValues: dict):
-		params = f"id={publisherId!r}"
-		self._update(self.__tableName, updatedValues, params)
-
-	def deletePublisherById(self, publisherId):
-		params = f"id={publisherId!r}"
-		self._delete(self.__tableName, params)
+	@staticmethod
+	def deletePublisherById(publisherId):
+		Publisher.delete_by_id(publisherId)

@@ -1,17 +1,16 @@
 import socket as Socket
 from threading import Thread
+
 from clientHandler import ClientHandler
-from dbProvider import DataBaseProvider
 from models import ClientInfo
-from serverTerminal import ServerTerminal
+
 
 class Server:
-	def __init__(self, address="", port=2000, dbProvider=DataBaseProvider()):
+	def __init__(self, address="", port=2000):
 		self.socket = Socket.socket()
 		self.socket.bind((address, port))
 		
 		self.__isWorking = False
-		self.dbProvider = dbProvider
 		self.clients = {}
 
 	@property
@@ -21,7 +20,7 @@ class Server:
 	def start(self):
 		self.__isWorking = True
 		Thread(target=self.listenClients).start()
-		ServerTerminal(self).start()
+		return self
 		
 	def listenClients(self):
 		while self.__isWorking:
@@ -29,14 +28,16 @@ class Server:
 			clientInfo = self.waitClientConnection()
 			if not self.__isWorking:
 				return
-
-			clientIndex = len(self.clients)
-			clientDbConnection = self.dbProvider.getDbConnection()
-			clientHandler = ClientHandler(self, clientInfo, clientIndex, clientDbConnection)
-			self.clients[clientIndex] = clientHandler
-			clientHandler.start()
+			self.serveClient(clientInfo)
 			
-			print(f"\r{clientHandler.clientAddress} has connected")
+	def serveClient(self, clientInfo: ClientInfo):
+		clientIndex = len(self.clients)
+		clientHandler = ClientHandler(clientInfo, clientIndex)
+		self.clients[clientIndex] = clientHandler
+		clientHandler.onClientDisconnected = self.onClientDisconnected
+		clientHandler.start()
+
+		print(f"\rClient #{clientHandler.clientIndex} {clientHandler.clientAddress} has connected")
 	
 	def waitClientConnection(self):
 		try:
@@ -48,7 +49,7 @@ class Server:
 		
 	def onClientDisconnected(self, client: ClientHandler):
 		self.clients.pop(client.clientIndex)
-		print(f"\r{client.clientIndex} {client.clientAddress} has disconnected")
+		print(f"\rClient #{client.clientIndex} {client.clientAddress} has disconnected")
 
 	def stop(self):
 		self.__isWorking = False
@@ -56,6 +57,3 @@ class Server:
 		for client in self.clients.values():
 			client.disconnect()
 		print("Server has stopped")
-
-if __name__ == '__main__':
-	Server().start()
