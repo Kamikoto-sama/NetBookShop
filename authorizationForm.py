@@ -24,6 +24,9 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 		self.signUpBtn.clicked.connect(lambda: self.authenticate(True))
 		self.accessCodeEdit.hide()
 		self.haveAccessCode.stateChanged.connect(self.onHaveAccessCode)
+		self.loginEdit.editingFinished.connect(self.authenticate)
+		self.passwordEdit.editingFinished.connect(self.authenticate)
+		self.accessCodeEdit.editingFinished.connect(self.authenticate)
 		
 		self.clientWorker.onServerDisconnected = lambda: self.serverConnectionLostEvent.emit()
 		self.clientWorker.onError = lambda message: self.errorMessageEvent.emit(message)
@@ -56,6 +59,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 			return
 		self.clientWorker.start()
 		self.setEnabled(True)
+		self.loginEdit.setFocus()
 
 	def authenticate(self, register=False):
 		if not self.validateLoginData():

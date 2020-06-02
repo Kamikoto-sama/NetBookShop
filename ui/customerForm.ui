@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>728</width>
+    <width>736</width>
     <height>568</height>
    </rect>
   </property>
@@ -37,7 +37,7 @@
      <property name="elideMode">
       <enum>Qt::ElideMiddle</enum>
      </property>
-     <widget class="QWidget" name="books">
+     <widget class="QWidget" name="booksTab">
       <property name="cursor">
        <cursorShape>ArrowCursor</cursorShape>
       </property>
@@ -50,8 +50,38 @@
        </property>
        <item>
         <widget class="QTableWidget" name="booksTable">
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="showDropIndicator" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="dragDropOverwriteMode">
+          <bool>false</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="showGrid">
+          <bool>false</bool>
+         </property>
+         <property name="cornerButtonEnabled">
+          <bool>false</bool>
+         </property>
+         <attribute name="horizontalHeaderCascadingSectionResizes">
+          <bool>false</bool>
+         </attribute>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
+         </attribute>
+         <attribute name="verticalHeaderCascadingSectionResizes">
+          <bool>false</bool>
          </attribute>
          <column>
           <property name="text">
@@ -219,13 +249,28 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="orders">
+     <widget class="QWidget" name="ordersTab">
       <attribute name="title">
        <string>My orders</string>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
         <widget class="QTableWidget" name="ordersTable">
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustIgnored</enum>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="showGrid">
+          <bool>false</bool>
+         </property>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
          </attribute>

@@ -13,14 +13,14 @@ class OrdersRepository:
 	@staticmethod
 	def getUserOrders(userId) -> List[dict]:
 		user: User = User.select().where(User.id == userId).first()
-		orders = list(user.orders.select(Order.id, Book.name.alias("bookName"), User.login.alias("userName"), 
-										 Order.userId, Order.date).join(Book, on=(Order.bookId == Book.id))
-					  					.join(User, on=(Order.userId == User.id)).dicts())
+		orders = list(user.orders.select(Order.id, Book.name.alias("bookName"), Order.date).join(Book).dicts())
 		return orders
 	
 	@staticmethod
 	def getAllOrders() -> List[dict]:
-		orders = list(Order.select().dicts())
+		orders = list(Order.select(Order.id, Book.name.alias("bookName"), User.login.alias("userName"),
+										 Order.userId, Order.date).join(Book, on=(Order.bookId == Book.id))
+					  .join(User, on=(Order.userId == User.id)).dicts())
 		return orders
 
 	@staticmethod
