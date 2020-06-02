@@ -1,7 +1,7 @@
 from threading import Thread
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget
 
 from clientWorker import ClientWorker
 from models import Response
@@ -38,17 +38,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 			return
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])
-		self.fillBooksTable(response.body["books"])
-		
-	def fillBooksTable(self, books: list):
-		self.booksTable.setRowCount(len(books))
-		for rowIndex, book in enumerate(books):
-			for colIndex, colName in enumerate(book):
-				if colName == "id":
-					continue
-				item = QTableWidgetItem(str(book[colName]))
-				item.setTextAlignment(Qt.AlignCenter)
-				self.booksTable.setItem(rowIndex, colIndex - 1, item)
+		self.fillTable(self.booksTable, response.body["books"])
 				
 	def onCurrentTabChanged(self, index):
 		if index == 0 or self.ordersTabLoaded:
@@ -62,17 +52,18 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if not response.succeed:
 			self.onResponseError("User orders fetch error", response.message)
 			return
-		self.fillOrdersTable(response.body)
+		self.fillTable(self.ordersTable, response.body)
 		
-	def fillOrdersTable(self, orders: list):
-		self.ordersTable.setRowCount(len(orders))
-		for rowIndex, order in enumerate(orders):
-			for colIndex, colName in enumerate(order):
+	@staticmethod
+	def fillTable(tableWidget: QTableWidget, items):
+		tableWidget.setRowCount(len(items))
+		for rowIndex, item in enumerate(items):
+			for colIndex, colName in enumerate(item):
 				if colName == "id":
 					continue
-				item = QTableWidgetItem(str(order[colName]))
-				item.setTextAlignment(Qt.AlignCenter)
-				self.ordersTable.setItem(rowIndex, colIndex - 1, item)
+				cell = QTableWidgetItem(str(item[colName]))
+				cell.setTextAlignment(Qt.AlignCenter)
+				tableWidget.setItem(rowIndex, colIndex - 1, cell)
 		
 	def onServerConnectionLost(self):
 		QMessageBox.critical(self, "Error", "Server connection lost")
