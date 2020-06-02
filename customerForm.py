@@ -22,6 +22,18 @@ class CustomerForm(Ui_customerForm, QWidget):
 		
 		self.tabs.currentChanged.connect(self.onCurrentTabChanged)
 		self.ordersTabLoaded = False
+		self.itemsMap = {
+			"orders":[],
+			"books":[]
+		}
+		
+		self.orderBtn.clicked.connect(self.makeOrder)
+		
+	def makeOrder(self):
+		rowIndex = self.booksTable.currentRow()
+		booksCount = self.booksTable.item(rowIndex, 5).text()
+		bookId = self.itemsMap["books"][rowIndex]
+		print(booksCount, bookId)
 		
 	def init(self):
 		self.show()
@@ -38,7 +50,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 			return
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])
-		self.fillTable(self.booksTable, response.body["books"])
+		self.fillTable(self.booksTable, response.body["books"], "books")
 				
 	def onCurrentTabChanged(self, index):
 		if index == 0 or self.ordersTabLoaded:
@@ -52,14 +64,14 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if not response.succeed:
 			self.onResponseError("User orders fetch error", response.message)
 			return
-		self.fillTable(self.ordersTable, response.body)
+		self.fillTable(self.ordersTable, response.body, "orders")
 		
-	@staticmethod
-	def fillTable(tableWidget: QTableWidget, items):
+	def fillTable(self, tableWidget: QTableWidget, items, tableName):
 		tableWidget.setRowCount(len(items))
 		for rowIndex, item in enumerate(items):
 			for colIndex, colName in enumerate(item):
 				if colName == "id":
+					self.itemsMap[tableName].append(item[colName])
 					continue
 				cell = QTableWidgetItem(str(item[colName]))
 				cell.setTextAlignment(Qt.AlignCenter)
