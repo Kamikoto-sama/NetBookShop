@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from json import JSONDecoder, JSONEncoder
+from typing import List
+
 
 class ClientInfo:
 	def __init__(self, rawClientInfo):
@@ -62,6 +64,28 @@ class Role:
 	CUSTOMER = "customer"
 	LIBRARIAN = "librarian"
 	NONE = None
+	
+class ChangesUpdateEvent:
+	def __init__(self, tables: List, changes: dict, roles: List=None, exceptClientId=None):
+		self.roles = roles
+		self.changes = changes
+		self.tables = tables
+		self.exceptClientId = exceptClientId
+		
+	def toJson(self):
+		data = {
+			"changes": self.changes,
+			"tables": self.tables,
+		}
+		dataJson = JSONEncoder().encode(data)
+		return dataJson
+	
+	@staticmethod
+	def fromJson(jsonData):
+		data = JSONDecoder().decode(jsonData)
+		changes = data["changes"]
+		tables = data["tables"]
+		return ChangesUpdateEvent(tables, changes)
 	
 @dataclass
 class UserInfo:

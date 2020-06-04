@@ -4,7 +4,7 @@ from threading import Thread
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from config import dataClosingSequence, dataPackageEncoding, dataPackageSize
-from models import Request, Response
+from models import Request, Response, ChangesUpdateEvent
 
 
 class ClientWorker(Thread):
@@ -15,11 +15,11 @@ class ClientWorker(Thread):
 		self.socket = Socket.socket()
 		self.responseCallback = None
 		
-		self.onError = None
-		self.onServerDisconnected = None
+		self.onError = lambda *_: None
+		self.onServerDisconnected = lambda *_: None
+		self.changesEvent = lambda *_: None
 
 	def run(self):
-		# self.connectToServer()
 		self.listenResponse()
 
 	def connectToServer(self):
@@ -38,8 +38,7 @@ class ClientWorker(Thread):
 				responseData = ''.join(responseParts)[:-len(dataClosingSequence)]
 				self.handleResponse(responseData)
 				responseParts = []
-		if self.onServerDisconnected is not None:
-			self.onServerDisconnected()
+		self.onServerDisconnected()
 
 	def getDataPackage(self):
 		try:
@@ -54,9 +53,10 @@ class ClientWorker(Thread):
 		self.socket.sendall(requestData)
 
 	def handleResponse(self, responseData):
-		response = Response.fromJson(responseData)
 		if self.responseCallback is not None:
+			response = Response.fromJson(responseData)
 			self.responseCallback(response)
 			self.responseCallback = None
 			return
-		#TODO: Update events
+		changesEvent = ChangesUpdateEvent.fromJson(responseData)
+		self.changesEvent(changesEvent)

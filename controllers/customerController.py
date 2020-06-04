@@ -1,5 +1,5 @@
 from controllers.baseController import BaseController
-from models import Role
+from models import Role, ChangesUpdateEvent
 from repositories.authorsRepository import AuthorsRepository
 from repositories.booksRepository import BooksRepository
 from repositories.ordersRepository import OrdersRepository
@@ -14,8 +14,19 @@ class CustomerController(BaseController):
 		return self.ok(body=orders)
 	
 	def makeOrder(self, bookId):
+		book = BooksRepository.getBookById(bookId)
+		if book is None:
+			return self.badRequest("No such book")
+		if book["count"] > 0:
+			BooksRepository.updateBookById(bookId, {"count": book["count"] - 1})
+		else:
+			return self.badRequest("There is no book left")
+			
 		OrdersRepository.addOrder(self.userInfo.id, bookId)
-		return self.ok()
+		changes = {"orders": OrdersRepository.getAllOrders()}
+		changesEvent = ChangesUpdateEvent(["orders"], changes, [Role.LIBRARIAN])
+		self.changesUpdateEvent(changesEvent)
+		return self.ok(body=bookId)
 	
 	def cancelOrder(self, orderId):
 		OrdersRepository.deleteOrderById(orderId)

@@ -4,9 +4,10 @@ from models import Role, Response
 class BaseController:
 	allowedRole = Role.NONE
 	
-	def __init__(self, userInfo):
+	def __init__(self, userInfo, changesEvent):
+		self.changesUpdateEvent = changesEvent
 		self.userInfo = userInfo
-
+		
 	@staticmethod
 	def badRequest(message):
 		return Response(False, message)

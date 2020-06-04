@@ -37,7 +37,7 @@ class Book(BaseModel):
 class Order(BaseModel):
 	bookId = ForeignKeyField(Book)
 	userId = ForeignKeyField(User, backref="orders")
-	date = DateField(default=date.today())
+	date = DateField(formats="%d.%m.%Y", default=date.today())
 	
 def initDb():
 	if not User.table_exists():

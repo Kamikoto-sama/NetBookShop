@@ -8,14 +8,18 @@ from requestHandler import RequestHandler
 
 
 class ClientHandler(Thread):
-	def __init__(self, clientInfo: ClientInfo, clientIndex):
+	def __init__(self, clientInfo: ClientInfo, clientIndex, changesEvent):
 		super().__init__()
 		self.connection: socket = clientInfo.connection
 		self.clientAddress = clientInfo.fullAddress 
-		self.clientIndex = clientIndex
+		self.index = clientIndex
 		self.connectionTime = datetime.now().strftime("%H:%M:%S")
-		self.requestHandler = RequestHandler()
+		self.requestHandler = RequestHandler(changesEvent)
 		self.onClientDisconnected = lambda *_: None
+		
+	@property
+	def role(self):
+		return self.requestHandler.userInfo.role
 		
 	def disconnect(self):
 		self.connection.close()
@@ -37,7 +41,7 @@ class ClientHandler(Thread):
 			return 0
 
 	def handleRequest(self, requestData):
-		response = self.requestHandler.handle(requestData, self.clientIndex)
+		response = self.requestHandler.handle(requestData, self.index)
 		self.respond(response.toJson())
 
 	def respond(self, data: str):

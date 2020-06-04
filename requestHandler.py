@@ -4,7 +4,8 @@ from models import Request, UserInfo
 
 
 class RequestHandler:
-	def __init__(self):
+	def __init__(self, changesEvent):
+		self.changesEvent = changesEvent
 		self.userInfo = UserInfo(None, None, None)
 		self.currentController = None
 
@@ -24,7 +25,7 @@ class RequestHandler:
 			return BaseController.badRequest(message)
 
 		if self.currentController is None or not isinstance(self.currentController, controller):
-			self.currentController = controller(self.userInfo)
+			self.currentController = controller(self.userInfo, self.changesEvent)
 		action = getattr(self.currentController, request.action)
 		try:
 			response = action(request.body) if action.__code__.co_argcount > 1 else action()

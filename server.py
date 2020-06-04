@@ -2,7 +2,7 @@ import socket as Socket
 from threading import Thread
 
 from clientHandler import ClientHandler
-from models import ClientInfo
+from models import ClientInfo, ChangesUpdateEvent
 
 
 class Server:
@@ -32,12 +32,18 @@ class Server:
 			
 	def serveClient(self, clientInfo: ClientInfo):
 		clientIndex = len(self.clients)
-		clientHandler = ClientHandler(clientInfo, clientIndex)
+		clientHandler = ClientHandler(clientInfo, clientIndex, self.sendChangesUpdateEvent)
 		self.clients[clientIndex] = clientHandler
 		clientHandler.onClientDisconnected = self.onClientDisconnected
 		clientHandler.start()
 
-		print(f"\rClient #{clientHandler.clientIndex} {clientHandler.clientAddress} has connected")
+		print(f"\rClient #{clientHandler.index} {clientHandler.clientAddress} has connected")
+	
+	def sendChangesUpdateEvent(self, updateEvent: ChangesUpdateEvent):
+		for client in self.clients.values():
+			if client.role not in updateEvent.roles or client.index == updateEvent.exceptClientId:
+				continue
+			client.respond(updateEvent.toJson())
 	
 	def waitClientConnection(self):
 		try:
@@ -48,8 +54,8 @@ class Server:
 				raise
 		
 	def onClientDisconnected(self, client: ClientHandler):
-		self.clients.pop(client.clientIndex)
-		print(f"\rClient #{client.clientIndex} {client.clientAddress} has disconnected")
+		self.clients.pop(client.index)
+		print(f"\rClient #{client.index} {client.clientAddress} has disconnected")
 
 	def stop(self):
 		self.__isWorking = False

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from dataBaseContext import Order, User, Book
@@ -7,7 +8,8 @@ class OrdersRepository:
 
 	@staticmethod
 	def addOrder(userId, bookId) -> Order:
-		order = Order.create(userId=userId, bookId=bookId)
+		today = datetime.today().strftime("%d.%m.%Y")
+		order = Order.create(userId=userId, bookId=bookId, date=today)
 		return order
 
 	@staticmethod
