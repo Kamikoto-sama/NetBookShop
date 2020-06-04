@@ -222,7 +222,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton_14">
+                 <widget class="QPushButton" name="searchBtn">
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>
@@ -299,7 +299,7 @@
            <widget class="QWidget" name="widget_17" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <item>
-              <widget class="QPushButton" name="pushButton_9">
+              <widget class="QPushButton" name="cancelOrderBtn">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>

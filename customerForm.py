@@ -1,10 +1,12 @@
 from threading import Thread
 
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import pyqtSignal, Qt, pyqtSlot
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget
 
 from clientWorker import ClientWorker
 from models import Response, ChangesUpdateEvent
+from processingForm import ProcessingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.customerForm import Ui_customerForm
 
@@ -14,9 +16,11 @@ class CustomerForm(Ui_customerForm, QWidget):
 	serverConnectionLostEvent = pyqtSignal()
 	changesReceivedEvent = pyqtSignal(object)
 	orderMadeEvent = pyqtSignal(object)
+	orderCanceledEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__()
 		self.setupUi(self)
+		
 		self.clientWorker = clientWorker
 		self.initialDataReceivedEvent.connect(self.initBooksPage)
 		self.serverConnectionLostEvent.connect(self.onServerConnectionLost)
@@ -31,14 +35,59 @@ class CustomerForm(Ui_customerForm, QWidget):
 			"orders":[],
 			"books":[]
 		}
+		self.requestedItemIndex = -1
 		
 		self.orderBtn.clicked.connect(self.makeOrder)
+		self.processingForm = ProcessingForm(self)
+		self.orderCanceledEvent.connect(self.onOrderCanceled)
+		self.cancelOrderBtn.clicked.connect(self.cancelOrder)
 		
-	def onOrderMade(self, response):
+	def onOrderCanceled(self, response: Response):
+		self.processingForm.hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return
-		print(response.body)
+		self.ordersTable.removeRow(self.requestedItemIndex)
+		self.itemsMap["orders"].pop(self.requestedItemIndex)
+		
+	def cancelOrder(self):
+		rowIndex = self.ordersTable.currentRow()
+		if rowIndex < 0:
+			return
+		self.requestedItemIndex = rowIndex
+		orderId = self.itemsMap["orders"][rowIndex]
+		request = RequestBuilder.Customer.cancelOrder(orderId)
+		responseHandler = lambda data: self.orderCanceledEvent.emit(data)
+		self.clientWorker.requestData(request, responseHandler)
+		self.processingForm.showRequestProcessing()
+		
+	def onOrderMade(self, response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.message)
+			return
+		bookCountCell = self.booksTable.item(self.requestedItemIndex, 5)
+		bookCount = str(int(bookCountCell.text()) - 1)
+		bookCountCell.setText(bookCount)
+		self.clearTable(self.ordersTable, "orders")
+		self.ordersTabLoaded = False
+		
+	def makeOrder(self):
+		rowIndex = self.booksTable.currentRow()
+		if rowIndex < 0:
+			return
+		bookCountCell = self.booksTable.item(rowIndex, 5)
+		booksCount = int(bookCountCell.text())
+		if booksCount == 0:
+			self.showInvalidOperationMessage("There is no books left")
+			return 
+		self.requestedItemIndex = rowIndex
+		
+		bookId = self.itemsMap["books"][rowIndex]
+		request = RequestBuilder.Customer.makeOrder(bookId)
+		responseHandler = lambda data: self.orderMadeEvent.emit(data)
+		self.clientWorker.requestData(request, responseHandler)
+		self.processingForm.showRequestProcessing()
 		
 	def onChangesReceived(self, changesUpdate: ChangesUpdateEvent):
 		tables = ", ".join(changesUpdate.tables)
@@ -47,19 +96,6 @@ class CustomerForm(Ui_customerForm, QWidget):
 		buttons = QMessageBox.Yes | QMessageBox.No
 		res = QMessageBox().information(self, title, message, buttons, QMessageBox.No)
 		print(res)
-		
-	def makeOrder(self):
-		rowIndex = self.booksTable.currentRow()
-		if rowIndex < 0:
-			return
-		booksCount = int(self.booksTable.item(rowIndex, 5).text())
-		if booksCount == 0:
-			self.showInvalidOperationMessage("There is no books left")
-			return 
-		bookId = self.itemsMap["books"][rowIndex]
-		request = RequestBuilder.Customer.makeOrder(bookId)
-		responseHandler = lambda data: self.orderMadeEvent.emit(data)
-		self.clientWorker.requestData(request, responseHandler)
 		
 	def init(self):
 		self.show()
@@ -91,6 +127,11 @@ class CustomerForm(Ui_customerForm, QWidget):
 			self.showErrorMessage("User orders fetch error", response.message)
 			return
 		self.fillTable(self.ordersTable, response.body, "orders")
+		
+	def clearTable(self, tableWidget: QTableWidget, tableName):
+		tableWidget.clearContents()
+		tableWidget.setRowCount(0)
+		self.itemsMap[tableName].clear()
 		
 	def fillTable(self, tableWidget: QTableWidget, items, tableName):
 		tableWidget.setRowCount(len(items))

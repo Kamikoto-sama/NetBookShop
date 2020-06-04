@@ -7,10 +7,10 @@ from dataBaseContext import Order, User, Book
 class OrdersRepository:
 
 	@staticmethod
-	def addOrder(userId, bookId) -> Order:
-		today = datetime.today().strftime("%d.%m.%Y")
-		order = Order.create(userId=userId, bookId=bookId, date=today)
-		return order
+	def addOrder(userId, bookId) -> dict:
+		today = datetime.today().strftime("%d.%m.%Y %H:%M")
+		order = Order.create(user=userId, book=bookId, date=today)
+		return {"id":order.id, "bookName":order.book.name, "userName":order.user.login, "date":order.date}
 
 	@staticmethod
 	def getUserOrders(userId) -> List[dict]:
@@ -21,9 +21,14 @@ class OrdersRepository:
 	@staticmethod
 	def getAllOrders() -> List[dict]:
 		orders = list(Order.select(Order.id, Book.name.alias("bookName"), User.login.alias("userName"),
-										 Order.userId, Order.date).join(Book, on=(Order.bookId == Book.id))
-					  .join(User, on=(Order.userId == User.id)).dicts())
+								   Order.user, Order.date).join(Book, on=(Order.book == Book.id))
+					  .join(User, on=(Order.user == User.id)).dicts())
 		return orders
+
+	@staticmethod
+	def getOrderById(orderId) -> Order:
+		order = Order.get(orderId)
+		return order
 
 	@staticmethod
 	def deleteOrderById(orderId):

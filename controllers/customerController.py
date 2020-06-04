@@ -26,9 +26,12 @@ class CustomerController(BaseController):
 		changes = {"orders": OrdersRepository.getAllOrders()}
 		changesEvent = ChangesUpdateEvent(["orders"], changes, [Role.LIBRARIAN])
 		self.changesUpdateEvent(changesEvent)
-		return self.ok(body=bookId)
+		return self.ok()
 	
 	def cancelOrder(self, orderId):
+		order = OrdersRepository.getOrderById(orderId)
+		order.book.count += 1
+		order.book.save()
 		OrdersRepository.deleteOrderById(orderId)
 		return self.ok()
 	

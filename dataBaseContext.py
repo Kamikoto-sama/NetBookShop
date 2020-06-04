@@ -35,8 +35,8 @@ class Book(BaseModel):
 	price = IntegerField()
 
 class Order(BaseModel):
-	bookId = ForeignKeyField(Book)
-	userId = ForeignKeyField(User, backref="orders")
+	book = ForeignKeyField(Book)
+	user = ForeignKeyField(User, backref="orders")
 	date = DateField(formats="%d.%m.%Y", default=date.today())
 	
 def initDb():
