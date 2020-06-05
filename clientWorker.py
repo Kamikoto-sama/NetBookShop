@@ -29,6 +29,10 @@ class ClientWorker(Thread):
 			return False
 		print("Connected")
 		return True
+	
+	def closeConnection(self):
+		self.onServerDisconnected = lambda: None
+		self.socket.close()
 		
 	def listenResponse(self):
 		responseParts = []
@@ -43,7 +47,7 @@ class ClientWorker(Thread):
 	def getDataPackage(self):
 		try:
 			return self.socket.recv(dataPackageSize)
-		except ConnectionResetError:
+		except ConnectionError:
 			return 0
 
 	def requestData(self, request: Request, responseCallback):
@@ -53,10 +57,9 @@ class ClientWorker(Thread):
 		self.socket.sendall(requestData)
 
 	def handleResponse(self, responseData):
-		if self.responseCallback is not None:
-			response = Response.fromJson(responseData)
+		response = Response.fromJson(responseData)
+		if self.responseCallback is not None and not response.changes:
 			self.responseCallback(response)
 			self.responseCallback = None
 			return
-		changesEvent = ChangesUpdateEvent.fromJson(responseData)
-		self.changesEvent(changesEvent)
+		self.changesEvent(response)

@@ -1,6 +1,6 @@
 from threading import Thread
 
-from PyQt5.QtCore import pyqtSignal, Qt, pyqtSlot
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget
 
@@ -17,6 +17,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	changesReceivedEvent = pyqtSignal(object)
 	orderMadeEvent = pyqtSignal(object)
 	orderCanceledEvent = pyqtSignal(object)
+	filteredBooksReceivedEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__()
 		self.setupUi(self)
@@ -41,7 +42,53 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.processingForm = ProcessingForm(self)
 		self.orderCanceledEvent.connect(self.onOrderCanceled)
 		self.cancelOrderBtn.clicked.connect(self.cancelOrder)
+		self.resetBtn.clicked.connect(self.resetFilter)
+		self.searchBtn.clicked.connect(self.applyFilter)
+		self.filteredBooksReceivedEvent.connect(self.fillFilteredBooks)
+		self.nameFilterEdit.returnPressed.connect(self.applyFilter)
+		self.genreFilterEdit.returnPressed.connect(self.applyFilter)
+
+	def onChangesReceived(self, response: Response):
+		tables = ", ".join(response.body)
+		title = "Changes update"
+		message = f"Some data has changed in: {tables}\n Do you want to update?"
+		buttons = QMessageBox.Yes | QMessageBox.No
+		res = QMessageBox().information(self, title, message, buttons, QMessageBox.No)
+		print(res)
+
+	def fillFilteredBooks(self, response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.message)
+			return
+		self.clearTable(self.booksTable, "books")
+		self.fillTable(self.booksTable, "books", response.body)
 		
+	def resetFilter(self):
+		self.nameFilterEdit.clear()
+		self.genreFilterEdit.clear()
+		self.authorsList.setCurrentIndex(0)
+		self.publishersList.setCurrentIndex(0)
+		self.applyFilter(True)
+		
+	def applyFilter(self, reset=False):
+		filters = [
+			(self.nameFilterEdit.text(), "name"),
+			(self.genreFilterEdit.text(), "genre"),
+			(self.authorsList.currentText(), "author"),
+			(self.publishersList.currentText(), "publisher")
+		]
+		filterParams = {}
+		for filterValue, filterName in filters:
+			if filterValue != "":
+				filterParams[filterName] = filterValue
+		if len(filterParams) == 0 and not reset:
+			return 
+		request = RequestBuilder.Customer.getBooks(filterParams)
+		resHandler = lambda data: self.filteredBooksReceivedEvent.emit(data)
+		self.clientWorker.requestData(request, resHandler)
+		self.processingForm.showRequestProcessing()
+
 	def onOrderCanceled(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
@@ -89,16 +136,9 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.clientWorker.requestData(request, responseHandler)
 		self.processingForm.showRequestProcessing()
 		
-	def onChangesReceived(self, changesUpdate: ChangesUpdateEvent):
-		tables = ", ".join(changesUpdate.tables)
-		title = "Changes update"
-		message = f"Some data has changed in: {tables}\n Do you want to update tables?"
-		buttons = QMessageBox.Yes | QMessageBox.No
-		res = QMessageBox().information(self, title, message, buttons, QMessageBox.No)
-		print(res)
-		
 	def init(self):
 		self.show()
+		self.processingForm.showRequestProcessing()
 		Thread(target=self.requestInitData).start()
 		
 	def requestInitData(self):
@@ -107,12 +147,13 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.clientWorker.requestData(request, handleInitialData)
 		
 	def initBooksPage(self, response: Response):
+		self.processingForm.hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])
-		self.fillTable(self.booksTable, response.body["books"], "books")
+		self.fillTable(self.booksTable, "books", response.body["books"])
 				
 	def onCurrentTabChanged(self, index):
 		if index == 0 or self.ordersTabLoaded:
@@ -126,14 +167,14 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if not response.succeed:
 			self.showErrorMessage("User orders fetch error", response.message)
 			return
-		self.fillTable(self.ordersTable, response.body, "orders")
+		self.fillTable(self.ordersTable, "orders", response.body)
 		
 	def clearTable(self, tableWidget: QTableWidget, tableName):
 		tableWidget.clearContents()
 		tableWidget.setRowCount(0)
 		self.itemsMap[tableName].clear()
 		
-	def fillTable(self, tableWidget: QTableWidget, items, tableName):
+	def fillTable(self, tableWidget: QTableWidget, tableName, items):
 		tableWidget.setRowCount(len(items))
 		for rowIndex, item in enumerate(items):
 			for colIndex, colName in enumerate(item):
@@ -150,6 +191,10 @@ class CustomerForm(Ui_customerForm, QWidget):
 		
 	def showInvalidOperationMessage(self, message):
 		QMessageBox().warning(self, "Invalid operation", message)
+		
+	def closeEvent(self, event: QCloseEvent):		
+		self.clientWorker.closeConnection()
+		event.accept()
 
 	def showErrorMessage(self, title, message):
 		QMessageBox().critical(self, title, message)

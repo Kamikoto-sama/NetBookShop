@@ -2,7 +2,7 @@ import socket as Socket
 from threading import Thread
 
 from clientHandler import ClientHandler
-from models import ClientInfo, ChangesUpdateEvent
+from models import ClientInfo, ChangesUpdateEvent, Response
 
 
 class Server:
@@ -41,9 +41,11 @@ class Server:
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesUpdateEvent):
 		for client in self.clients.values():
-			if client.role not in updateEvent.roles or client.index == updateEvent.exceptClientId:
+			if not (client.role in updateEvent.roles or client.index == updateEvent.includeClientId) or \
+					client.index == updateEvent.exceptClientId:
 				continue
-			client.respond(updateEvent.toJson())
+			response = Response(True, "", updateEvent.tables, True)
+			client.respond(response.toJson())
 	
 	def waitClientConnection(self):
 		try:

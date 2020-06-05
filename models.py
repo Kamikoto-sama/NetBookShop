@@ -38,7 +38,8 @@ class Request:
 		return requestJson
 		
 class Response:
-	def __init__(self, succeed: bool, message: str, body:dict=None):
+	def __init__(self, succeed:bool, message:str, body:dict=None, changes:bool=False):
+		self.changes = changes
 		self.body = body
 		self.message = message
 		self.succeed = succeed
@@ -47,6 +48,7 @@ class Response:
 		responseDict = {
 			"succeed": self.succeed,
 			"message": self.message,
+			"changes": self.changes,
 			"body": self.body
 		}
 		responseJson = JSONEncoder().encode(responseDict)
@@ -58,6 +60,7 @@ class Response:
 		body = jsonResponse["body"]
 		message = jsonResponse["message"]
 		succeed = jsonResponse["succeed"]
+		changes = jsonResponse["changes"]
 		return Response(succeed, message, body)
 	
 class Role:
@@ -66,27 +69,12 @@ class Role:
 	NONE = None
 	
 class ChangesUpdateEvent:
-	def __init__(self, tables: List, changes: dict, roles: List=None, exceptClientId=None):
+	def __init__(self, tables: List, roles: List=None, exceptClientId=None, includeClientId=None):
+		self.includeClientId = includeClientId
 		self.roles = roles
-		self.changes = changes
 		self.tables = tables
 		self.exceptClientId = exceptClientId
 		
-	def toJson(self):
-		data = {
-			"changes": self.changes,
-			"tables": self.tables,
-		}
-		dataJson = JSONEncoder().encode(data)
-		return dataJson
-	
-	@staticmethod
-	def fromJson(jsonData):
-		data = JSONDecoder().decode(jsonData)
-		changes = data["changes"]
-		tables = data["tables"]
-		return ChangesUpdateEvent(tables, changes)
-	
 @dataclass
 class UserInfo:
 	id: int

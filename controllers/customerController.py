@@ -23,8 +23,7 @@ class CustomerController(BaseController):
 			return self.badRequest("There is no book left")
 			
 		OrdersRepository.addOrder(self.userInfo.id, bookId)
-		changes = {"orders": OrdersRepository.getAllOrders()}
-		changesEvent = ChangesUpdateEvent(["orders"], changes, [Role.LIBRARIAN])
+		changesEvent = ChangesUpdateEvent(["orders"], [Role.LIBRARIAN], includeClientId=self.userInfo.id)
 		self.changesUpdateEvent(changesEvent)
 		return self.ok()
 	
@@ -36,6 +35,16 @@ class CustomerController(BaseController):
 		return self.ok()
 	
 	def getBooks(self, filterParams: dict):
+		if "author" in filterParams:
+			authors = AuthorsRepository.getAuthorsByName(filterParams["author"])
+			if len(authors) == 0:
+				return self.badRequest(f"Unknown author {filterParams['author']}")
+			filterParams["author"] = authors[0]["id"]
+		if "publisher" in filterParams:
+			publishers = PublishersRepository.getPublishersByName(filterParams["publisher"])
+			if len(publishers) == 0:
+				return self.badRequest(f"Unknown publisher {filterParams['publisher']}")
+			filterParams["publisher"] = publishers[0]["id"]
 		books = BooksRepository.getBooks(filterParams)
 		return self.ok(body=books)
 	

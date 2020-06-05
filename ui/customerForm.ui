@@ -167,14 +167,17 @@
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_10">
                 <item alignment="Qt::AlignHCenter">
-                 <widget class="QLineEdit" name="lineEdit">
+                 <widget class="QLineEdit" name="nameFilterEdit">
                   <property name="placeholderText">
                    <string>Book name</string>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
                 <item alignment="Qt::AlignHCenter">
-                 <widget class="QLineEdit" name="lineEdit_2">
+                 <widget class="QLineEdit" name="genreFilterEdit">
                   <property name="placeholderText">
                    <string>Genre</string>
                   </property>
@@ -232,7 +235,10 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButton_18">
+                 <widget class="QPushButton" name="resetBtn">
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
                   <property name="text">
                    <string>Reset</string>
                   </property>

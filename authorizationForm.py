@@ -1,9 +1,11 @@
 from threading import Thread
 
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox
 
 from clientWorker import ClientWorker
+from processingForm import ProcessingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.authorizationForm import Ui_AuthorizationForm
 from models import Response
@@ -34,6 +36,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 		self.tryConnectToServerEvent.connect(self.handleServerConnection)
 		self.serverConnectionLostEvent.connect(self.onServerConnectionLost)
 		self.responseReceivedEvent.connect(self.handleResponse)
+		self.processingForm = ProcessingForm(self)
 		
 	def onHaveAccessCode(self, haveAccessCode):
 		if haveAccessCode:
@@ -74,8 +77,10 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 					RequestBuilder.Auth.login(loginData)
 		responseHandler = lambda response: self.responseReceivedEvent.emit(response)
 		self.clientWorker.requestData(request, responseHandler)
+		self.processingForm.showRequestProcessing()
 	
 	def handleResponse(self, response: Response):
+		self.processingForm.hide()
 		if not response.succeed:
 			title = "Invalid data"
 			message = response.message

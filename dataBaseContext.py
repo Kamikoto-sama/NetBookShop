@@ -17,12 +17,12 @@ class User(BaseModel):
 	orders = []
 
 class Author(BaseModel):
-	name = TextField()
+	name = TextField(unique=True)
 	birthDate = DateTimeField()
 	bio = TextField()
 
 class Publisher(BaseModel):
-	name = TextField()
+	name = TextField(unique=True)
 	creationDate = DateField()
 
 class Book(BaseModel):
