@@ -27,7 +27,7 @@ class BooksRepository:
 
 	@staticmethod
 	def addBook(bookData: dict):
-		bookId = Book.create(**bookData).id
+		bookId = Book.create(**bookData).userId
 		book = list(Book.select().where(Book.id == bookId).dicts())[0]
 		return book
 		

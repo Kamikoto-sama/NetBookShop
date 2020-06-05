@@ -2,7 +2,7 @@ from threading import Thread
 
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget
+from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget, QHeaderView
 
 from clientWorker import ClientWorker
 from models import Response, ChangesUpdateEvent
@@ -19,7 +19,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	orderCanceledEvent = pyqtSignal(object)
 	filteredBooksReceivedEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
-		super().__init__()
+		super().__init__(None, Qt.WindowCloseButtonHint)
 		self.setupUi(self)
 		
 		self.clientWorker = clientWorker
@@ -28,6 +28,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		clientWorker.onServerDisconnected = lambda: self.serverConnectionLostEvent.emit()
 		self.ordersReceivedEvent.connect(self.initOrdersPage)
 		self.changesReceivedEvent.connect(self.onChangesReceived)
+		clientWorker.onChangesReceived = lambda data: self.changesReceivedEvent.emit(data)
 		self.orderMadeEvent.connect(self.onOrderMade)
 		
 		self.tabs.currentChanged.connect(self.onCurrentTabChanged)
@@ -36,7 +37,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 			"orders":[],
 			"books":[]
 		}
-		self.requestedItemIndex = -1
+		self.requestedItemInfo = None
 		
 		self.orderBtn.clicked.connect(self.makeOrder)
 		self.processingForm = ProcessingForm(self)
@@ -47,14 +48,30 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.filteredBooksReceivedEvent.connect(self.fillFilteredBooks)
 		self.nameFilterEdit.returnPressed.connect(self.applyFilter)
 		self.genreFilterEdit.returnPressed.connect(self.applyFilter)
+		
+		self.booksUpdateBtn.hide()
+		self.ordersUpdateBtn.hide()
+		self.booksUpdateBtn.clicked.connect(lambda: self.updateTable("books"))
+		self.ordersUpdateBtn.clicked.connect(lambda: self.updateTable("orders"))
+
+		self.ordersTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+
+	def updateTable(self, tableName):
+		table: QTableWidget = getattr(self, tableName + "Table")
+		self.clearTable(table, tableName)
+		if tableName == "books":
+			self.applyFilter(True)
+			self.booksUpdateBtn.hide()
+			return 
+		self.ordersTabLoaded = False
+		self.onCurrentTabChanged(1)
 
 	def onChangesReceived(self, response: Response):
-		tables = ", ".join(response.body)
-		title = "Changes update"
-		message = f"Some data has changed in: {tables}\n Do you want to update?"
-		buttons = QMessageBox.Yes | QMessageBox.No
-		res = QMessageBox().information(self, title, message, buttons, QMessageBox.No)
-		print(res)
+		tables = set(response.body) & set(self.itemsMap)
+		message = f"Some data has changed in: {', '.join(tables)}"
+		QMessageBox().information(self, "Changes update", message)
+		for tableName in tables:
+			getattr(self, tableName + "UpdateBtn").show()
 
 	def fillFilteredBooks(self, response):
 		self.processingForm.hide()
@@ -94,14 +111,19 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return
-		self.ordersTable.removeRow(self.requestedItemIndex)
-		self.itemsMap["orders"].pop(self.requestedItemIndex)
+		self.ordersTable.removeRow(self.requestedItemInfo)
+		self.itemsMap["orders"].pop(self.requestedItemInfo)
+		if response.body not in self.itemsMap["books"]:
+			return
+		rowIndex = self.itemsMap["books"].index(response.body)
+		bookCountCell = self.booksTable.item(rowIndex, 5)
+		bookCountCell.setText(str(int(bookCountCell.text()) + 1))
 		
 	def cancelOrder(self):
 		rowIndex = self.ordersTable.currentRow()
 		if rowIndex < 0:
 			return
-		self.requestedItemIndex = rowIndex
+		self.requestedItemInfo = rowIndex
 		orderId = self.itemsMap["orders"][rowIndex]
 		request = RequestBuilder.Customer.cancelOrder(orderId)
 		responseHandler = lambda data: self.orderCanceledEvent.emit(data)
@@ -113,7 +135,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return
-		bookCountCell = self.booksTable.item(self.requestedItemIndex, 5)
+		bookCountCell = self.booksTable.item(self.requestedItemInfo, 5)
 		bookCount = str(int(bookCountCell.text()) - 1)
 		bookCountCell.setText(bookCount)
 		self.clearTable(self.ordersTable, "orders")
@@ -128,7 +150,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if booksCount == 0:
 			self.showInvalidOperationMessage("There is no books left")
 			return 
-		self.requestedItemIndex = rowIndex
+		self.requestedItemInfo = rowIndex
 		
 		bookId = self.itemsMap["books"][rowIndex]
 		request = RequestBuilder.Customer.makeOrder(bookId)
@@ -159,6 +181,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		if index == 0 or self.ordersTabLoaded:
 			return
 		self.ordersTabLoaded = True
+		self.ordersUpdateBtn.hide()
 		handleResponse = lambda data: self.ordersReceivedEvent.emit(data)
 		request = RequestBuilder.Customer.getOrders()
 		self.clientWorker.requestData(request, handleResponse)

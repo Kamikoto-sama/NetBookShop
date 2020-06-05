@@ -40,9 +40,12 @@ class Server:
 		print(f"\rClient #{clientHandler.index} {clientHandler.clientAddress} has connected")
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesUpdateEvent):
+		client: ClientHandler = None
 		for client in self.clients.values():
-			if not (client.role in updateEvent.roles or client.index == updateEvent.includeClientId) or \
-					client.index == updateEvent.exceptClientId:
+			condition = not client.role in updateEvent.roles
+			condition = condition and client.userId != updateEvent.includeClientId
+			condition = condition or client.userId == updateEvent.exceptClientId
+			if condition:
 				continue
 			response = Response(True, "", updateEvent.tables, True)
 			client.respond(response.toJson())

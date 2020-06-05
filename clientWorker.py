@@ -17,7 +17,7 @@ class ClientWorker(Thread):
 		
 		self.onError = lambda *_: None
 		self.onServerDisconnected = lambda *_: None
-		self.changesEvent = lambda *_: None
+		self.onChangesReceived = lambda *_: None
 
 	def run(self):
 		self.listenResponse()
@@ -58,8 +58,10 @@ class ClientWorker(Thread):
 
 	def handleResponse(self, responseData):
 		response = Response.fromJson(responseData)
-		if self.responseCallback is not None and not response.changes:
+		if response.changes:
+			self.onChangesReceived(response)
+		elif self.responseCallback is not None:
 			self.responseCallback(response)
 			self.responseCallback = None
-			return
-		self.changesEvent(response)
+		else:
+			self.onError(f"Unsupportable response {responseData}")

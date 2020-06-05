@@ -21,6 +21,10 @@ class ClientHandler(Thread):
 	def role(self):
 		return self.requestHandler.userInfo.role
 		
+	@property
+	def userId(self):
+		return self.requestHandler.userInfo.userId
+		
 	def disconnect(self):
 		self.connection.close()
 		

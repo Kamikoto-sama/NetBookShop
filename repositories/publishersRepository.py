@@ -4,7 +4,7 @@ from dataBaseContext import Publisher
 class PublishersRepository:
 	@staticmethod
 	def addPublisher(publisherData: dict):
-		publisherId = Publisher.create(**publisherData).id
+		publisherId = Publisher.create(**publisherData).userId
 		publisher = list(Publisher.select().where(Publisher.id == publisherId))[0]
 		return publisher
 

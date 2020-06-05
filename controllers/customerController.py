@@ -10,7 +10,7 @@ class CustomerController(BaseController):
 	allowedRole = Role.CUSTOMER
 
 	def getOrders(self):
-		orders = OrdersRepository.getUserOrders(self.userInfo.id)
+		orders = OrdersRepository.getUserOrders(self.userInfo.userId)
 		return self.ok(body=orders)
 	
 	def makeOrder(self, bookId):
@@ -22,8 +22,8 @@ class CustomerController(BaseController):
 		else:
 			return self.badRequest("There is no book left")
 			
-		OrdersRepository.addOrder(self.userInfo.id, bookId)
-		changesEvent = ChangesUpdateEvent(["orders"], [Role.LIBRARIAN], includeClientId=self.userInfo.id)
+		OrdersRepository.addOrder(self.userInfo.userId, bookId)
+		changesEvent = ChangesUpdateEvent(["orders", "books"], [Role.LIBRARIAN])
 		self.changesUpdateEvent(changesEvent)
 		return self.ok()
 	
@@ -32,7 +32,9 @@ class CustomerController(BaseController):
 		order.book.count += 1
 		order.book.save()
 		OrdersRepository.deleteOrderById(orderId)
-		return self.ok()
+		changesEvent = ChangesUpdateEvent(["orders", "books"], [Role.LIBRARIAN])
+		self.changesUpdateEvent(changesEvent)
+		return self.ok(body=order.book.id)
 	
 	def getBooks(self, filterParams: dict):
 		if "author" in filterParams:

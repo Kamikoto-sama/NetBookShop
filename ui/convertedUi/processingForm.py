@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_processingForm(object):
     def setupUi(self, processingForm):
         processingForm.setObjectName("processingForm")
-        processingForm.resize(454, 48)
+        processingForm.resize(454, 82)
         processingForm.setAutoFillBackground(False)
         processingForm.setStyleSheet("background-color: rgb(231, 231, 231);")
         self.verticalLayout = QtWidgets.QVBoxLayout(processingForm)
@@ -43,6 +43,7 @@ class Ui_processingForm(object):
     def retranslateUi(self, processingForm):
         _translate = QtCore.QCoreApplication.translate
         processingForm.setWindowTitle(_translate("processingForm", "Form"))
+        self.statusBar.setFormat(_translate("processingForm", "Hello"))
 
 
 if __name__ == "__main__":

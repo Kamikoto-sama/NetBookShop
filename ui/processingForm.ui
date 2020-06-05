@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>48</height>
+    <height>82</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,6 +54,9 @@
      </property>
      <property name="invertedAppearance">
       <bool>false</bool>
+     </property>
+     <property name="format">
+      <string>Hello</string>
      </property>
     </widget>
    </item>

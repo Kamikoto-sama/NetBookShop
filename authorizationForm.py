@@ -1,6 +1,6 @@
 from threading import Thread
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox
 
@@ -18,7 +18,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 	responseReceivedEvent = pyqtSignal(object)
 
 	def __init__(self, clientWorker: ClientWorker, onAuthorized):
-		super(QWidget, self).__init__()	
+		super().__init__(None, Qt.WindowCloseButtonHint)	
 		self.setupUi(self)
 		self.clientWorker = clientWorker
 		self.onAuthorized = onAuthorized

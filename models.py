@@ -61,7 +61,7 @@ class Response:
 		message = jsonResponse["message"]
 		succeed = jsonResponse["succeed"]
 		changes = jsonResponse["changes"]
-		return Response(succeed, message, body)
+		return Response(succeed, message, body, changes)
 	
 class Role:
 	CUSTOMER = "customer"

@@ -27,7 +27,7 @@ class AuthController(BaseController):
 			return self.badRequest("Invalid password")			
 		
 		self.userInfo.login = user.login
-		self.userInfo.id = user.id
+		self.userInfo.userId = user.id
 		self.userInfo.role = user.role
 		
 		return self.ok(body={"role":user.role})
