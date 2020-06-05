@@ -26,7 +26,7 @@ class Publisher(BaseModel):
 	creationDate = DateField()
 
 class Book(BaseModel):
-	name = TextField()
+	name = TextField(unique=True)
 	genre = TextField()
 	pageCount = IntegerField()
 	author = ForeignKeyField(Author)

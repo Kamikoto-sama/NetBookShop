@@ -1,5 +1,6 @@
 from config import accessCode
 from controllers.baseController import BaseController
+from dataBaseContext import User
 from models import Role
 from repositories import UserRepository
 
@@ -15,6 +16,7 @@ class AuthController(BaseController):
 			else:
 				return self.badRequest("Wrong access code")
 		user = UserRepository.registerUser(loginData)
+		self.updateUserInfo(user)
 		return self.ok(body={"role":user.role})
 	
 	def login(self, loginData: dict):
@@ -26,8 +28,10 @@ class AuthController(BaseController):
 		if user.password != loginData["password"]:
 			return self.badRequest("Invalid password")			
 		
+		self.updateUserInfo(user)
+		return self.ok(body={"role":user.role})
+	
+	def updateUserInfo(self, user: User):
 		self.userInfo.login = user.login
 		self.userInfo.userId = user.id
 		self.userInfo.role = user.role
-		
-		return self.ok(body={"role":user.role})
