@@ -11,6 +11,19 @@ class RequestBuilder:
 		def login(loginData: dict):
 			return Request(Controllers.Auth, "login", loginData)
 		
+	class Librarian:
+		@staticmethod
+		def getBooksPageData():
+			return Request(Controllers.Librarian, "getBooksPageData")
+		
+		@staticmethod
+		def getAllAuthors():
+			return Request(Controllers.Librarian, "getAllAuthors")
+		
+		@staticmethod
+		def getAuthorByName(authorName):
+			return Request(Controllers.Librarian, "getAuthorByName")
+		
 	class Customer:
 		@staticmethod
 		def getOrders():

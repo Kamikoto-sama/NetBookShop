@@ -3,7 +3,7 @@ from json import JSONEncoder, JSONDecoder
 from time import sleep
 
 # Config
-saveRegisteredFiles = True
+saveRegisteredFiles = False
 removeUnregisteredFiles = True
 dataStoreName = "registeredUiFiles.txt"
 jsonEncoder = JSONEncoder(indent= 2)

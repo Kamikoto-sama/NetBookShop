@@ -13,7 +13,7 @@ class ClientWorker(Thread):
 		self.address = address
 		self.port = port
 		self.socket = Socket.socket()
-		self.responseCallback = None
+		self.responseQueue = []
 		
 		self.onError = lambda *_: None
 		self.onServerDisconnected = lambda *_: None
@@ -53,15 +53,14 @@ class ClientWorker(Thread):
 	def requestData(self, request: Request, responseCallback):
 		requestData = request.toJson().encode(dataPackageEncoding)
 		requestData += dataClosingSequence
-		self.responseCallback = responseCallback
+		self.responseQueue.append(responseCallback)
 		self.socket.sendall(requestData)
 
 	def handleResponse(self, responseData):
 		response = Response.fromJson(responseData)
 		if response.changes:
 			self.onChangesReceived(response)
-		elif self.responseCallback is not None:
-			self.responseCallback(response)
-			self.responseCallback = None
+		elif len(self.responseQueue) > 0:
+			self.responseQueue.pop(0)(response)
 		else:
 			self.onError(f"Unsupportable response {responseData}")

@@ -13,7 +13,7 @@ class BaseController:
 		return Response(False, message)
 
 	@staticmethod
-	def ok(message=None, body=None):
+	def ok(body=None, message=None):
 		return Response(True, message, body)
 	
 	@staticmethod
