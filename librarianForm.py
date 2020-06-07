@@ -57,6 +57,17 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.pageInitialDataReceivedEvent.connect(self.initPage)
 		self.initializingTableName = None
 		
+		self.cellsChangingStarted = {i:None for i in self.itemsMap if i != "orders"}
+		self.booksTable.itemChanged.connect(lambda item: self.onCellChanged(item, "books"))
+		pendItemToChange = lambda item: (self.cellsChangingStarted["books"] = item)
+		self.booksTable.itemDoubleClicked.connect(pendItemToChange)
+		
+	def onCellChanged(self, item: QTableWidgetItem, tableName):
+		if self.cellsChangingStarted[tableName] == item:
+			return 
+		self.cellsChangingStarted[tableName].remove(itemPosition)
+		print(item.text())
+		
 	def initPage(self, response: Response):
 		self.processingForm.hide()
 		getattr(self, self.initializingTableName + "UpdateBtn").hide()
