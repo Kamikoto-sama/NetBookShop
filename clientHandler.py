@@ -23,7 +23,7 @@ class ClientHandler(Thread):
 		
 	@property
 	def userId(self):
-		return self.requestHandler.userInfo.userId
+		return self.requestHandler.userInfo.id
 		
 	def disconnect(self):
 		self.connection.close()

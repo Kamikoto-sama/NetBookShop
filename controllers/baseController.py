@@ -5,7 +5,7 @@ class BaseController:
 	allowedRole = Role.NONE
 	
 	def __init__(self, userInfo, changesEvent):
-		self.changesUpdateEvent = changesEvent
+		self.callChangesEvent = changesEvent
 		self.userInfo = userInfo
 		
 	@staticmethod

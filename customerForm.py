@@ -5,7 +5,7 @@ from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget, QHeaderView
 
 from clientWorker import ClientWorker
-from models import Response, ChangesUpdateEvent
+from models import Response, ChangesEvent
 from processingForm import ProcessingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.customerForm import Ui_customerForm

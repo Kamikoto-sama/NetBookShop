@@ -1,5 +1,5 @@
 from controllers.baseController import BaseController
-from models import Role, ChangesUpdateEvent
+from models import Role, ChangesEvent
 from repositories.authorsRepository import AuthorsRepository
 from repositories.booksRepository import BooksRepository
 from repositories.ordersRepository import OrdersRepository
@@ -10,7 +10,7 @@ class CustomerController(BaseController):
 	allowedRole = Role.CUSTOMER
 
 	def getOrders(self):
-		orders = OrdersRepository.getUserOrders(self.userInfo.userId)
+		orders = OrdersRepository.getUserOrders(self.userInfo.id)
 		return self.ok(body=orders)
 	
 	def makeOrder(self, bookId):
@@ -22,9 +22,9 @@ class CustomerController(BaseController):
 		else:
 			return self.badRequest("There is no book left")
 			
-		OrdersRepository.addOrder(self.userInfo.userId, bookId)
-		changesEvent = ChangesUpdateEvent(["orders", "books"], [Role.LIBRARIAN])
-		self.changesUpdateEvent(changesEvent)
+		OrdersRepository.addOrder(self.userInfo.id, bookId)
+		changesEvent = ChangesEvent(["orders", "books"], [Role.LIBRARIAN])
+		self.callChangesEvent(changesEvent)
 		return self.ok()
 	
 	def cancelOrder(self, orderId):
@@ -32,8 +32,8 @@ class CustomerController(BaseController):
 		order.book.count += 1
 		order.book.save()
 		OrdersRepository.deleteOrderById(orderId)
-		changesEvent = ChangesUpdateEvent(["orders", "books"], [Role.LIBRARIAN])
-		self.changesUpdateEvent(changesEvent)
+		changesEvent = ChangesEvent(["orders", "books"], [Role.LIBRARIAN])
+		self.callChangesEvent(changesEvent)
 		return self.ok(body=order.book.id)
 	
 	def getBooks(self, filterParams: dict):

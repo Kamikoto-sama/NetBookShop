@@ -4,7 +4,7 @@ from threading import Thread
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from config import dataClosingSequence, dataPackageEncoding, dataPackageSize
-from models import Request, Response, ChangesUpdateEvent
+from models import Request, Response, ChangesEvent
 
 
 class ClientWorker(Thread):

@@ -17,12 +17,28 @@ class RequestBuilder:
 			return Request(Controllers.Librarian, "getBooksPageData")
 		
 		@staticmethod
-		def getAllAuthors():
+		def getAuthorByName(authorName):
+			return Request(Controllers.Librarian, "getAuthorByName", authorName)
+		
+		@staticmethod
+		def getBooks(filterParams: dict):
+			return Request(Controllers.Librarian, "getBooks", filterParams)
+		
+		@staticmethod
+		def booksDelete(bookId):
+			return Request(Controllers.Librarian, "deleteBook", bookId)
+
+		@staticmethod
+		def authorsGetAll():
 			return Request(Controllers.Librarian, "getAllAuthors")
 		
 		@staticmethod
-		def getAuthorByName(authorName):
-			return Request(Controllers.Librarian, "getAuthorByName", authorName)
+		def publishersGetAll():
+			return Request(Controllers.Librarian, "getAllPublishers")
+		
+		@staticmethod
+		def ordersGetAll():
+			return Request(Controllers.Librarian, "getAllOrders")
 		
 	class Customer:
 		@staticmethod

@@ -29,14 +29,14 @@ class Book(BaseModel):
 	name = TextField(unique=True)
 	genre = TextField()
 	pageCount = IntegerField()
-	author = ForeignKeyField(Author)
-	publisher = ForeignKeyField(Publisher)
+	author = ForeignKeyField(Author, on_delete="CASCADE")
+	publisher = ForeignKeyField(Publisher, on_delete="CASCADE")
 	count = IntegerField()
 	price = IntegerField()
 
 class Order(BaseModel):
-	book = ForeignKeyField(Book)
-	user = ForeignKeyField(User, backref="orders")
+	book = ForeignKeyField(Book, on_delete="CASCADE")
+	user = ForeignKeyField(User, backref="orders", on_delete="CASCADE")
 	date = DateField(formats="%d.%m.%Y", default=date.today())
 	
 def initDb():

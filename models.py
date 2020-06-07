@@ -68,8 +68,8 @@ class Role:
 	LIBRARIAN = "librarian"
 	NONE = None
 	
-class ChangesUpdateEvent:
-	def __init__(self, tables: List, roles: List=None, exceptClientId=None, includeClientId=None):
+class ChangesEvent:
+	def __init__(self, tables: List, roles: List=[], exceptClientId=None, includeClientId=None):
 		self.includeClientId = includeClientId
 		self.roles = roles
 		self.tables = tables

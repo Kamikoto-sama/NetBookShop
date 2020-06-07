@@ -2,7 +2,7 @@ import socket as Socket
 from threading import Thread
 
 from clientHandler import ClientHandler
-from models import ClientInfo, ChangesUpdateEvent, Response
+from models import ClientInfo, ChangesEvent, Response
 
 
 class Server:
@@ -39,7 +39,7 @@ class Server:
 
 		print(f"\rClient #{clientHandler.index} {clientHandler.clientAddress} has connected")
 	
-	def sendChangesUpdateEvent(self, updateEvent: ChangesUpdateEvent):
+	def sendChangesUpdateEvent(self, updateEvent: ChangesEvent):
 		client: ClientHandler = None
 		for client in self.clients.values():
 			condition = not client.role in updateEvent.roles

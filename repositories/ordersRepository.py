@@ -19,9 +19,14 @@ class OrdersRepository:
 		return orders
 	
 	@staticmethod
+	def getOrderByBookId(bookId):
+		order = Order.select().where(Order.book == Book.get(bookId)).dicts().first()
+		return order
+	
+	@staticmethod
 	def getAllOrders() -> List[dict]:
-		orders = list(Order.select(Order.id, Book.name.alias("bookName"), User.login.alias("userName"),
-								   Order.user, Order.date).join(Book, on=(Order.book == Book.id))
+		orders = list(Order.select(Order.id, Book.name.alias("bookName"), User.login.alias("userLogin"),
+								   Order.date).join(Book, on=(Order.book == Book.id))
 					  .join(User, on=(Order.user == User.id)).dicts())
 		return orders
 

@@ -33,5 +33,5 @@ class AuthController(BaseController):
 	
 	def updateUserInfo(self, user: User):
 		self.userInfo.login = user.login
-		self.userInfo.userId = user.id
+		self.userInfo.id = user.id
 		self.userInfo.role = user.role
