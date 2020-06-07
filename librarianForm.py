@@ -2,7 +2,7 @@ from threading import Thread
 
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView
+from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton
 
 from clientWorker import ClientWorker
 from models import Response
@@ -19,7 +19,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	pageInitialDataReceivedEvent = pyqtSignal(object)
 	
 	def __init__(self, clientWorker: ClientWorker):
-		super().__init__(None, Qt.WindowCloseButtonHint)
+		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
 		self.setupUi(self)
 		self.clientWorker = clientWorker
 		self.processingForm = ProcessingForm(self)
@@ -51,6 +51,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 
 		self.delBookBtn.clicked.connect(lambda: self.deleteItem("books"))
 		self.deletingItemInfo = None
+		self.tabsMap = ["books", "authors", "publishers", "orders"]
 		self.itemDeletedEvent.connect(self.onItemDeleted)
 		
 		self.pageInitialDataReceivedEvent.connect(self.initPage)
@@ -58,6 +59,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		
 	def initPage(self, response: Response):
 		self.processingForm.hide()
+		getattr(self, self.initializingTableName + "UpdateBtn").hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return 
@@ -81,19 +83,23 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.processingForm.hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
-			return 
-		table: QTableWidget
-		table, rowIndex = self.deletingItemInfo
+			return
+		tableName, rowIndex, itemId = self.deletingItemInfo
+		table: QTableWidget = getattr(self, tableName + "Table")
 		table.removeRow(rowIndex)
-		if response.body is not None:
-			print(f"Update {', '.join(response.body)}")
+		if itemId in self.itemsMap[tableName]:
+			self.itemsMap[tableName].remove(itemId)
+		for tableName in response.body:
+			self.updateTable(tableName)
 		
 	def deleteItem(self, tableName):
-		self.processingForm.showRequestProcessing()
 		table: QTableWidget = getattr(self, tableName + "Table")
 		rowIndex = table.currentRow()
-		self.deletingItemInfo = (table, rowIndex)
+		if rowIndex < 0:
+			return
+		self.processingForm.showRequestProcessing()
 		itemId = self.itemsMap[tableName][rowIndex]
+		self.deletingItemInfo = (tableName, rowIndex, itemId)
 		request = getattr(RequestBuilder.Librarian, tableName + "Delete")(itemId)
 		handleResponse = lambda data: self.itemDeletedEvent.emit(data)
 		self.clientWorker.requestData(request, handleResponse)
@@ -106,14 +112,22 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 			self.booksUpdateBtn.hide()
 			return
 		self.loadedPages[tableName] = False
-		self.onCurrentTabChanged(self.tabWidget.currentIndex())
+		tabIndex = self.tabsMap.index(tableName)
+		self.onCurrentTabChanged(tabIndex)
+		getattr(self, tableName + "UpdateBtn").hide()
 
 	def onChangesReceived(self, response: Response):
 		tables = set(response.body) & set(self.itemsMap)
-		message = f"Some data has changed in: {', '.join(tables)}"
-		QMessageBox().information(self, "Changes update", message)
+		updateMessageTables = []
 		for tableName in tables:
-			getattr(self, tableName + "UpdateBtn").show()
+			updateBtn: QPushButton = getattr(self, tableName + "UpdateBtn")
+			if updateBtn.isHidden():
+				updateBtn.show()
+				updateMessageTables.append(tableName)
+		if len(updateMessageTables) == 0:
+			return
+		message = f"Some data has changed in: {', '.join(updateMessageTables)}"
+		QMessageBox().information(self, "Changes update", message)
 
 	def resetFilter(self):
 		self.nameFilterEdit.clear()

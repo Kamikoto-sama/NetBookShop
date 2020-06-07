@@ -9,6 +9,10 @@ from repositories.publishersRepository import PublishersRepository
 class LibrarianController(BaseController):
 	allowedRole = Role.LIBRARIAN
 	
+	def getAllPublishers(self):
+		publishers = PublishersRepository.getAllPublishers()
+		return self.ok(publishers)
+	
 	def getAllOrders(self):
 		orders = OrdersRepository.getAllOrders()
 		return self.ok(orders)
@@ -21,7 +25,8 @@ class LibrarianController(BaseController):
 			tables.append("orders")
 		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
 		self.callChangesEvent(changesEvent)
-		return self.ok(["orders"] if order is not None else None)
+		body = ["orders"] if order is not None else []
+		return self.ok(body)
 
 	def getBooks(self, filterParams: dict):
 		if "author" in filterParams:

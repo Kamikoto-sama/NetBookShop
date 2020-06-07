@@ -19,7 +19,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	orderCanceledEvent = pyqtSignal(object)
 	filteredBooksReceivedEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
-		super().__init__(None, Qt.WindowCloseButtonHint)
+		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
 		self.setupUi(self)
 		
 		self.clientWorker = clientWorker
@@ -54,8 +54,14 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.booksUpdateBtn.clicked.connect(lambda: self.updateTable("books"))
 		self.ordersUpdateBtn.clicked.connect(lambda: self.updateTable("orders"))
 
-		self.ordersTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+		self.configureTables()
 
+	def configureTables(self):
+		for tableName in self.itemsMap:
+			table: QTableWidget = getattr(self, tableName + "Table")
+			for colIndex in range(table.columnCount()):
+				table.horizontalHeader().setSectionResizeMode(colIndex, QHeaderView.ResizeToContents)
+		
 	def updateTable(self, tableName):
 		table: QTableWidget = getattr(self, tableName + "Table")
 		self.clearTable(table, tableName)
@@ -68,10 +74,16 @@ class CustomerForm(Ui_customerForm, QWidget):
 
 	def onChangesReceived(self, response: Response):
 		tables = set(response.body) & set(self.itemsMap)
-		message = f"Some data has changed in: {', '.join(tables)}"
-		QMessageBox().information(self, "Changes update", message)
+		updateMessageTables = []
 		for tableName in tables:
-			getattr(self, tableName + "UpdateBtn").show()
+			updateBtn = getattr(self, tableName + "UpdateBtn")
+			if updateBtn.isHidden():
+				updateBtn.show()
+				updateMessageTables.append(tableName)
+		if len(updateMessageTables) == 0:
+			return
+		message = f"Some data has changed in: {', '.join(updateMessageTables)}"
+		QMessageBox().information(self, "Changes update", message)
 
 	def fillFilteredBooks(self, response):
 		self.processingForm.hide()

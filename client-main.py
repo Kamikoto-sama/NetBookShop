@@ -14,16 +14,16 @@ class Main:
 	def __init__(self):
 		self.clientWorker = ClientWorker(appAddress, appPort)
 		self.authForm = AuthForm(self.clientWorker, self.onAuthorized)
-		self.customerForm = CustomerForm(self.clientWorker)
-		self.librarianForm = LibrarianForm(self.clientWorker)
 
 	def launch(self):
 		self.authForm.init()
 
 	def onAuthorized(self, role):
 		if role == Role.CUSTOMER:
+			self.customerForm = CustomerForm(self.clientWorker)
 			self.customerForm.init()
 		elif role == Role.LIBRARIAN:
+			self.librarianForm = LibrarianForm(self.clientWorker)
 			self.librarianForm.init()
 		else:
 			message = f"Unknown role {role}"
