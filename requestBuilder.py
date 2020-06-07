@@ -22,7 +22,7 @@ class RequestBuilder:
 		
 		@staticmethod
 		def getAuthorByName(authorName):
-			return Request(Controllers.Librarian, "getAuthorByName")
+			return Request(Controllers.Librarian, "getAuthorByName", authorName)
 		
 	class Customer:
 		@staticmethod
