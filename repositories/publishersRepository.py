@@ -9,9 +9,9 @@ class PublishersRepository:
 		return publisher
 
 	@staticmethod
-	def getPublishersByName(publisherName):
-		publishers = Publisher.select().where(Publisher.name == publisherName).dicts()
-		return list(publishers)
+	def getPublisherByName(publisherName):
+		publisher = Publisher.select().where(Publisher.name == publisherName).dicts().first()
+		return publisher
 	
 	@staticmethod
 	def getAllPublishers():

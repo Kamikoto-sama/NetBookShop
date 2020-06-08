@@ -17,10 +17,14 @@ class LibrarianController(BaseController):
 			order = OrdersRepository.getOrderByBookId(bookId)
 			if order is not None and "name" in changes:
 				changedTables.append("orders")
+			result = self.replaceNamesToIds(changes)
+			if result is not None:
+				return result
+
 		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.id)
 		self.callChangesEvent(changesEvent)
 		update = set(changedTables) - {"books"}
-		return self.ok(update)
+		return self.ok(list(update))
 	
 	def getAllPublishers(self):
 		publishers = PublishersRepository.getAllPublishers()
@@ -42,25 +46,30 @@ class LibrarianController(BaseController):
 		return self.ok(body)
 
 	def getBooks(self, filterParams: dict):
-		if "author" in filterParams:
-			authors = AuthorsRepository.getAuthorsByName(filterParams["author"])
-			if len(authors) == 0:
-				return self.badRequest(f"Unknown author {filterParams['author']}")
-			filterParams["author"] = authors[0]["id"]
-		if "publisher" in filterParams:
-			publishers = PublishersRepository.getPublishersByName(filterParams["publisher"])
-			if len(publishers) == 0:
-				return self.badRequest(f"Unknown publisher {filterParams['publisher']}")
-			filterParams["publisher"] = publishers[0]["id"]
+		result = self.replaceNamesToIds(filterParams)
+		if result is not None:
+			return result
 		books = BooksRepository.getBooks(filterParams)
 		return self.ok(body=books)
+	
+	def replaceNamesToIds(self, items: dict):
+		if "author" in items:
+			author = AuthorsRepository.getAuthorByName(items["author"])
+			if author is None:
+				return self.badRequest(f"Unknown author {items['author']}")
+			items["author"] = author["id"]
+		if "publisher" in items:
+			publisher = PublishersRepository.getPublisherByName(items["publisher"])
+			if publisher is None:
+				return self.badRequest(f"Unknown publisher {items['publisher']}")
+			items["publisher"] = publisher["id"]
 	
 	def getAllAuthors(self):
 		authors = AuthorsRepository.getAllAuthors()
 		return self.ok(authors)
 	
 	def getAuthorByName(self, authorName):
-		author = AuthorsRepository.getAuthorsByName(authorName)
+		author = AuthorsRepository.getAuthorByName(authorName)
 		if author is None:
 			return self.badRequest("Unknown author")
 		self.ok(author)

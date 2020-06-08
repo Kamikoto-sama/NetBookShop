@@ -70,7 +70,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.booksSaveChangesBtn.clicked.connect(lambda: self.saveChanges("books"))
 		self.authorsSaveChangesBtn.clicked.connect(lambda: self.saveChanges("authors"))
 		self.publishersSaveChangesBtn.clicked.connect(lambda: self.saveChanges("publishers"))
-		self.changes: Dict[EntityChanges] = {table:EntityChanges for table in self.itemsMap if table != "orders"}
+		self.changes: Dict[EntityChanges] = {table:EntityChanges() for table in self.itemsMap if table != "orders"}
 		self.changesSavedEvent.connect(self.onChangesSaved)
 		
 	def onChangesSaved(self, response: Response):
@@ -79,6 +79,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 			self.showInvalidOperationMessage(response.message)
 			return
 		getattr(self, self.processingTableName + "SaveChangesBtn").setDisabled(True)
+		self.changes[self.processingTableName].clearChanges()
 		for tableName in response.body:
 			self.updateTable(tableName)
 

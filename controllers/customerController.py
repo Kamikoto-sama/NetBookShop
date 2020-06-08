@@ -38,15 +38,15 @@ class CustomerController(BaseController):
 	
 	def getBooks(self, filterParams: dict):
 		if "author" in filterParams:
-			authors = AuthorsRepository.getAuthorsByName(filterParams["author"])
-			if len(authors) == 0:
+			author = AuthorsRepository.getAuthorByName(filterParams["author"])
+			if author is None:
 				return self.badRequest(f"Unknown author {filterParams['author']}")
-			filterParams["author"] = authors[0]["id"]
+			filterParams["author"] = author["id"]
 		if "publisher" in filterParams:
-			publishers = PublishersRepository.getPublishersByName(filterParams["publisher"])
-			if len(publishers) == 0:
+			publisher = PublishersRepository.getPublisherByName(filterParams["publisher"])
+			if publisher is None:
 				return self.badRequest(f"Unknown publisher {filterParams['publisher']}")
-			filterParams["publisher"] = publishers[0]["id"]
+			filterParams["publisher"] = publisher["id"]
 		books = BooksRepository.getBooks(filterParams)
 		return self.ok(body=books)
 	

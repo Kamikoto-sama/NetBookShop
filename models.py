@@ -85,6 +85,9 @@ class EntityChanges:
 			self.changes[entityId] = {}
 		self.changes[entityId][fieldName] = value
 		
+	def clearChanges(self):
+		self.changes.clear()
+		
 	def toJson(self):
 		return JSONEncoder().encode(self.changes)
 	

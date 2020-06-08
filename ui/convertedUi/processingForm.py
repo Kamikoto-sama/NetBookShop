@@ -13,10 +13,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_processingForm(object):
     def setupUi(self, processingForm):
         processingForm.setObjectName("processingForm")
-        processingForm.resize(454, 82)
+        processingForm.resize(291, 46)
         processingForm.setAutoFillBackground(False)
         processingForm.setStyleSheet("background-color: rgb(231, 231, 231);")
         self.verticalLayout = QtWidgets.QVBoxLayout(processingForm)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.message = QtWidgets.QLabel(processingForm)
         font = QtGui.QFont()
@@ -28,14 +30,6 @@ class Ui_processingForm(object):
         self.message.setAlignment(QtCore.Qt.AlignCenter)
         self.message.setObjectName("message")
         self.verticalLayout.addWidget(self.message)
-        self.statusBar = QtWidgets.QProgressBar(processingForm)
-        self.statusBar.setMinimumSize(QtCore.QSize(0, 30))
-        self.statusBar.setProperty("value", 24)
-        self.statusBar.setAlignment(QtCore.Qt.AlignCenter)
-        self.statusBar.setTextVisible(True)
-        self.statusBar.setInvertedAppearance(False)
-        self.statusBar.setObjectName("statusBar")
-        self.verticalLayout.addWidget(self.statusBar)
 
         self.retranslateUi(processingForm)
         QtCore.QMetaObject.connectSlotsByName(processingForm)
@@ -43,7 +37,7 @@ class Ui_processingForm(object):
     def retranslateUi(self, processingForm):
         _translate = QtCore.QCoreApplication.translate
         processingForm.setWindowTitle(_translate("processingForm", "Form"))
-        self.statusBar.setFormat(_translate("processingForm", "Hello"))
+        self.message.setText(_translate("processingForm", "Processing request..."))
 
 
 if __name__ == "__main__":

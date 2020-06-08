@@ -9,9 +9,9 @@ class AuthorsRepository:
 		return author
 
 	@staticmethod
-	def getAuthorsByName(authorName):
-		authors = Author.select().where(Author.name == authorName).dicts()
-		return list(authors)
+	def getAuthorByName(authorName):
+		author = Author.select().where(Author.name == authorName).dicts().first()
+		return author
 	
 	@staticmethod
 	def getAllAuthors():
