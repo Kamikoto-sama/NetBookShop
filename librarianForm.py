@@ -1,11 +1,12 @@
 from threading import Thread
+from typing import List, Dict
 
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton
 
 from clientWorker import ClientWorker
-from models import Response
+from models import Response, EntityChanges
 from processingForm import ProcessingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.librarianForm import Ui_librarianForm
@@ -17,6 +18,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	changesReceivedEvent = pyqtSignal(object)
 	itemDeletedEvent = pyqtSignal(object)
 	pageInitialDataReceivedEvent = pyqtSignal(object)
+	changesSavedEvent = pyqtSignal(object)
 	
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
@@ -55,27 +57,64 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.itemDeletedEvent.connect(self.onItemDeleted)
 		
 		self.pageInitialDataReceivedEvent.connect(self.initPage)
-		self.initializingTableName = None
+		self.processingTableName = None
 		
-		self.cellsChangingStarted = {i:None for i in self.itemsMap if i != "orders"}
+		self.selectedCell = None
 		self.booksTable.itemChanged.connect(lambda item: self.onCellChanged(item, "books"))
-		pendItemToChange = lambda item: (self.cellsChangingStarted["books"] = item)
-		self.booksTable.itemDoubleClicked.connect(pendItemToChange)
+		self.authorsTable.itemChanged.connect(lambda item: self.onCellChanged(item, "authors"))
+		self.publishersTable.itemChanged.connect(lambda item: self.onCellChanged(item, "publishers"))
+		self.booksTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
+		self.authorsTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
+		self.publishersTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
+		self.entitiesFields: Dict[list] = {}
+		self.booksSaveChangesBtn.clicked.connect(lambda: self.saveChanges("books"))
+		self.authorsSaveChangesBtn.clicked.connect(lambda: self.saveChanges("authors"))
+		self.publishersSaveChangesBtn.clicked.connect(lambda: self.saveChanges("publishers"))
+		self.changes: Dict[EntityChanges] = {table:EntityChanges for table in self.itemsMap if table != "orders"}
+		self.changesSavedEvent.connect(self.onChangesSaved)
+		
+	def onChangesSaved(self, response: Response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.message)
+			return
+		getattr(self, self.processingTableName + "SaveChangesBtn").setDisabled(True)
+		for tableName in response.body:
+			self.updateTable(tableName)
+
+	def saveChanges(self, tableName):
+		self.processingForm.showRequestProcessing()
+		self.processingTableName = tableName
+		request = getattr(RequestBuilder.Librarian, tableName + "Update")(self.changes[tableName])
+		resHandler = lambda res: self.changesSavedEvent.emit(res)
+		self.clientWorker.requestData(request, resHandler)
+		
+	def fillEntityFields(self, entities: List[dict], entityName):
+		if entityName in self.entitiesFields or entities is None or len(entities) == 0:
+			return 
+		entity: dict = entities[0]
+		self.entitiesFields[entityName] = [field for field in entity.keys() if field != "id"]
 		
 	def onCellChanged(self, item: QTableWidgetItem, tableName):
-		if self.cellsChangingStarted[tableName] == item:
-			return 
-		self.cellsChangingStarted[tableName].remove(itemPosition)
-		print(item.text())
+		if self.selectedCell != item:
+			self.selectedCell = None
+			return
+		self.selectedCell = None
+		getattr(self, tableName + "SaveChangesBtn").setEnabled(True)
+		entityChanges: EntityChanges = self.changes[tableName]
+		fieldName = self.entitiesFields[tableName][item.column()]
+		itemId = self.itemsMap[tableName][item.row()]
+		entityChanges.saveChanges(itemId, fieldName, item.text())
 		
 	def initPage(self, response: Response):
 		self.processingForm.hide()
-		getattr(self, self.initializingTableName + "UpdateBtn").hide()
+		getattr(self, self.processingTableName + "UpdateBtn").hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return 
-		table = getattr(self, self.initializingTableName + "Table")
-		self.fillTable(table, self.initializingTableName, response.body)
+		table = getattr(self, self.processingTableName + "Table")
+		self.fillTable(table, self.processingTableName, response.body)
+		self.fillEntityFields(response.body, self.processingTableName)
 		
 	def onCurrentTabChanged(self, index):
 		if index == 0:
@@ -84,7 +123,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		if self.loadedPages[tabName]:
 			return
 		self.processingForm.showRequestProcessing()
-		self.initializingTableName = tabName
+		self.processingTableName = tabName
 		self.loadedPages[tabName] = True
 		request = getattr(RequestBuilder.Librarian, tabName + "GetAll")()
 		handleResponse = lambda res: self.pageInitialDataReceivedEvent.emit(res)
@@ -197,6 +236,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])
 		self.fillTable(self.booksTable, "books", response.body["books"])
+		self.fillEntityFields(response.body["books"], "books")
 
 	def clearTable(self, tableWidget: QTableWidget, tableName):
 		tableWidget.clearContents()

@@ -1,5 +1,5 @@
 from controllers.baseController import BaseController
-from models import Role, ChangesEvent
+from models import Role, ChangesEvent, EntityChanges
 from repositories.authorsRepository import AuthorsRepository
 from repositories.booksRepository import BooksRepository
 from repositories.ordersRepository import OrdersRepository
@@ -8,6 +8,19 @@ from repositories.publishersRepository import PublishersRepository
 
 class LibrarianController(BaseController):
 	allowedRole = Role.LIBRARIAN
+
+	def updateBooks(self, changesData: str):
+		changesContainer = EntityChanges.fromJson(changesData)
+		changedTables = ["books"]
+		for bookId, changes in changesContainer.changes.items():
+			BooksRepository.updateBookById(bookId, changes)
+			order = OrdersRepository.getOrderByBookId(bookId)
+			if order is not None and "name" in changes:
+				changedTables.append("orders")
+		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.id)
+		self.callChangesEvent(changesEvent)
+		update = set(changedTables) - {"books"}
+		return self.ok(update)
 	
 	def getAllPublishers(self):
 		publishers = PublishersRepository.getAllPublishers()

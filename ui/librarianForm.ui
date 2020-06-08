@@ -139,6 +139,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="booksSaveChangesBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -339,7 +342,10 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_6">
+              <widget class="QPushButton" name="authorsSaveChangesBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -487,7 +493,10 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_8">
+              <widget class="QPushButton" name="publishersSaveChangesBtn">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>

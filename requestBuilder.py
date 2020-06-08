@@ -1,5 +1,6 @@
 from controllersMap import Controllers
-from models import Request
+from models import Request, EntityChanges
+
 
 class RequestBuilder:
 	class Auth:
@@ -39,6 +40,10 @@ class RequestBuilder:
 		@staticmethod
 		def ordersGetAll():
 			return Request(Controllers.Librarian, "getAllOrders")
+		
+		@staticmethod
+		def booksUpdate(changes: EntityChanges):
+			return Request(Controllers.Librarian, "updateBooks", changes.toJson())
 		
 	class Customer:
 		@staticmethod

@@ -75,6 +75,24 @@ class ChangesEvent:
 		self.tables = tables
 		self.exceptClientId = exceptClientId
 		
+		
+class EntityChanges:
+	def __init__(self, changes: dict=None):
+		self.changes = changes if changes is not None else {}
+		
+	def saveChanges(self, entityId: int, fieldName, value):
+		if entityId not in self.changes:
+			self.changes[entityId] = {}
+		self.changes[entityId][fieldName] = value
+		
+	def toJson(self):
+		return JSONEncoder().encode(self.changes)
+	
+	@staticmethod
+	def fromJson(jsonData):
+		changesData = JSONDecoder().decode(jsonData)
+		return EntityChanges(changesData)
+
 @dataclass
 class UserInfo:
 	id: int
