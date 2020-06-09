@@ -116,7 +116,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		request = RequestBuilder.Customer.getBooks(filterParams)
 		resHandler = lambda data: self.filteredBooksReceivedEvent.emit(data)
 		self.clientWorker.requestData(request, resHandler)
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 
 	def onOrderCanceled(self, response: Response):
 		self.processingForm.hide()
@@ -140,7 +140,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		request = RequestBuilder.Customer.cancelOrder(orderId)
 		responseHandler = lambda data: self.orderCanceledEvent.emit(data)
 		self.clientWorker.requestData(request, responseHandler)
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		
 	def onOrderMade(self, response):
 		self.processingForm.hide()
@@ -168,11 +168,11 @@ class CustomerForm(Ui_customerForm, QWidget):
 		request = RequestBuilder.Customer.makeOrder(bookId)
 		responseHandler = lambda data: self.orderMadeEvent.emit(data)
 		self.clientWorker.requestData(request, responseHandler)
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		
 	def init(self):
 		self.show()
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		Thread(target=self.requestInitData).start()
 		
 	def requestInitData(self):

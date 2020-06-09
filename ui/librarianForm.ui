@@ -118,7 +118,7 @@
            <widget class="QWidget" name="widget_2" native="true">
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <widget class="QPushButton" name="addBookBtn">
+              <widget class="QPushButton" name="bookAddBtn">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -187,7 +187,10 @@
                 <item alignment="Qt::AlignHCenter">
                  <widget class="QLineEdit" name="genreFilterEdit">
                   <property name="placeholderText">
-                   <string>Genres</string>
+                   <string>Genre</string>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -647,16 +650,6 @@
                </property>
                <property name="text">
                 <string>Delete</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_10">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>Save</string>
                </property>
               </widget>
              </item>

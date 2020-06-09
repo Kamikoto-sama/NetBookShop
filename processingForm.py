@@ -9,8 +9,5 @@ class ProcessingForm(Ui_processingForm, QWidget):
 		self.setupUi(self)
 		self.setWindowModality(Qt.WindowModal)
 		
-	def showRequestProcessing(self):
-		self.show()
-		
 	def hide(self):
 		self.close()

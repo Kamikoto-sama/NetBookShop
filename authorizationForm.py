@@ -77,7 +77,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 					RequestBuilder.Auth.login(loginData)
 		responseHandler = lambda response: self.responseReceivedEvent.emit(response)
 		self.clientWorker.requestData(request, responseHandler)
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 	
 	def handleResponse(self, response: Response):
 		self.processingForm.hide()

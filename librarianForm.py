@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton
 
+from bookAddingForm import BookAddingForm
 from clientWorker import ClientWorker
 from models import Response, EntityChanges
 from processingForm import ProcessingForm
@@ -73,6 +74,16 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.changes: Dict[EntityChanges] = {table:EntityChanges() for table in self.itemsMap if table != "orders"}
 		self.changesSavedEvent.connect(self.onChangesSaved)
 		
+		self.bookAddBtn.clicked.connect(lambda: self.addItem("books"))
+		self.booksAddingForm = BookAddingForm(self, clientWorker)
+		
+	def addItem(self, tableName):
+		addingForm = getattr(self, tableName + "AddingForm")
+		addingForm.show()
+		if tableName == "books":
+			authors = self.authorsList.items
+			addingForm.init()
+		
 	def onChangesSaved(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
@@ -84,7 +95,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 			self.updateTable(tableName)
 
 	def saveChanges(self, tableName):
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		self.processingTableName = tableName
 		request = getattr(RequestBuilder.Librarian, tableName + "Update")(self.changes[tableName])
 		resHandler = lambda res: self.changesSavedEvent.emit(res)
@@ -100,12 +111,16 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		if self.selectedCell != item:
 			self.selectedCell = None
 			return
+		value = item.text()
 		self.selectedCell = None
+		if value == "":
+			self.showInvalidOperationMessage("Field can't be empty. Changes unsaved")
+			return 
 		getattr(self, tableName + "SaveChangesBtn").setEnabled(True)
 		entityChanges: EntityChanges = self.changes[tableName]
 		fieldName = self.entitiesFields[tableName][item.column()]
 		itemId = self.itemsMap[tableName][item.row()]
-		entityChanges.saveChanges(itemId, fieldName, item.text())
+		entityChanges.saveChanges(itemId, fieldName, value)
 		
 	def initPage(self, response: Response):
 		self.processingForm.hide()
@@ -123,7 +138,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		tabName = self.tabWidget.tabText(index).lower()
 		if self.loadedPages[tabName]:
 			return
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		self.processingTableName = tabName
 		self.loadedPages[tabName] = True
 		request = getattr(RequestBuilder.Librarian, tabName + "GetAll")()
@@ -148,7 +163,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		rowIndex = table.currentRow()
 		if rowIndex < 0:
 			return
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		itemId = self.itemsMap[tableName][rowIndex]
 		self.deletingItemInfo = (tableName, rowIndex, itemId)
 		request = getattr(RequestBuilder.Librarian, tableName + "Delete")(itemId)
@@ -203,7 +218,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		request = RequestBuilder.Librarian.getBooks(filterParams)
 		resHandler = lambda data: self.filteredBooksReceivedEvent.emit(data)
 		self.clientWorker.requestData(request, resHandler)
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 
 	def fillFilteredBooks(self, response):
 		self.processingForm.hide()
@@ -221,7 +236,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 
 	def init(self):
 		self.show()
-		self.processingForm.showRequestProcessing()
+		self.processingForm.show()
 		Thread(target=self.requestInitData).start()
 
 	def requestInitData(self):
