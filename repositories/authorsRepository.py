@@ -22,5 +22,5 @@ class AuthorsRepository:
 		Author.update(**updatedValues).where(Author.id == authorId).execute()
 
 	@staticmethod
-	def deletePublisherById(publisherId):
-		Author.delete_by_id(publisherId)
+	def deleteAuthorById(authorId):
+		Author.delete_by_id(authorId)

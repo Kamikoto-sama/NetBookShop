@@ -1,9 +1,9 @@
 from threading import Thread
 from typing import List, Dict
 
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import pyqtSignal, Qt, QMimeData
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton
+from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton, QComboBox
 
 from bookAddingForm import BookAddingForm
 from clientWorker import ClientWorker
@@ -44,7 +44,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.searchBtn.clicked.connect(self.applyFilter)
 		self.nameFilterEdit.returnPressed.connect(self.applyFilter)
 		self.genreFilterEdit.returnPressed.connect(self.applyFilter)
-		self.filteredBooksReceivedEvent.connect(self.fillFilteredBooks)
+		self.filteredBooksReceivedEvent.connect(self.onFilteredBooksReceived)
 		
 		self.booksUpdateBtn.hide()
 		self.ordersUpdateBtn.hide()
@@ -54,6 +54,9 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		clientWorker.onChangesReceived = lambda data: self.changesReceivedEvent.emit(data)
 
 		self.delBookBtn.clicked.connect(lambda: self.deleteItem("books"))
+		self.delAuthorBtn.clicked.connect(lambda: self.deleteItem("authors"))
+		self.delPublisherBtn.clicked.connect(lambda: self.deleteItem("publishers"))
+		self.delOrderBtn.clicked.connect(lambda: self.deleteItem("orders"))
 		self.deletingItemInfo = None
 		self.tabsMap = ["books", "authors", "publishers", "orders"]
 		self.itemDeletedEvent.connect(self.onItemDeleted)
@@ -78,6 +81,29 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.bookAddBtn.clicked.connect(lambda: self.addItem("books"))
 		self.booksAddingForm = BookAddingForm(self)
 		self.itemAddedEvent.connect(self.onItemAdded)
+		
+		self.searchAuthorBtn.clicked.connect(lambda: self.applyNameFilter("authors"))
+		self.searchPublisherBtn.clicked.connect(lambda: self.applyNameFilter("publishers"))
+		self.resetAuthorsBtn.clicked.connect(lambda: self.updateTable("authors"))
+		self.resetPublishersBtn.clicked.connect(lambda: self.updateTable("publishers"))
+		
+	def applyNameFilter(self, tableName, reset=False):
+		nameList: QComboBox = getattr(self, tableName + "List2")
+		name = nameList.currentText()
+		if name == "" and not reset:
+			return
+		table: QTableWidget = getattr(self, tableName + "Table")
+		items = table.findItems(name, Qt.MatchContains)
+		if len(items) == 0:
+			return 
+		rowIndex = items[0].row()
+		entityId = self.itemsMap[tableName][rowIndex]
+		entity = {"id":entityId}
+		for i in range(table.columnCount()):
+			entity[i] = table.item(rowIndex, i).text()
+		table.clearContents()
+		self.itemsMap[tableName].clear()
+		self.fillTable(table, tableName, [entity])
 		
 	def onItemAdded(self, response: Response):
 		self.processingForm.hide()
@@ -143,6 +169,17 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		table = getattr(self, self.processingTableName + "Table")
 		self.fillTable(table, self.processingTableName, response.body)
 		self.fillEntityFields(response.body, self.processingTableName)
+		if self.processingTableName != "orders":
+			self.updateList(self.processingTableName, [i["name"] for i in response.body])
+
+	def updateList(self, tableName, items):
+		items = ["", *items]
+		listWidget1: QComboBox = getattr(self, tableName + "List")
+		listWidget2: QComboBox = getattr(self, tableName + "List2")
+		listWidget1.clear()
+		listWidget2.clear()
+		listWidget1.addItems(items)
+		listWidget2.addItems(items)
 		
 	def onCurrentTabChanged(self, index):
 		if index == 0:
@@ -162,11 +199,6 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)
 			return
-		tableName, rowIndex, itemId = self.deletingItemInfo
-		table: QTableWidget = getattr(self, tableName + "Table")
-		table.removeRow(rowIndex)
-		if itemId in self.itemsMap[tableName]:
-			self.itemsMap[tableName].remove(itemId)
 		for tableName in response.body:
 			self.updateTable(tableName)
 		
@@ -232,7 +264,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.clientWorker.requestData(request, resHandler)
 		self.processingForm.show()
 
-	def fillFilteredBooks(self, response):
+	def onFilteredBooksReceived(self, response):
 		self.processingForm.hide()
 		if not response.succeed:
 			self.showInvalidOperationMessage(response.message)

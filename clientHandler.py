@@ -40,7 +40,8 @@ class ClientHandler(Thread):
 		
 	def getDataPackage(self):
 		try:
-			return self.connection.recv(dataPackageSize)
+			recvData = self.connection.recv(dataPackageSize)
+			return recvData
 		except ConnectionError:
 			return 0
 

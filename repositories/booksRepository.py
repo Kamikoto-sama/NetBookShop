@@ -17,6 +17,16 @@ class BooksRepository:
 		return list(books)
 
 	@staticmethod
+	def getBooksByAuthorId(authorId):
+		book = Book.select().where(Book.author == Author.get(id=authorId)).dicts()
+		return book
+	
+	@staticmethod
+	def getBooksByPublisherId(publisherId):
+		book = Book.select().where(Book.publisher == Publisher.get(id=publisherId)).dicts()
+		return book
+	
+	@staticmethod
 	def getBookById(bookId):
 		book = Book.select(Book.id, Book.name, Book.genre, Book.pageCount,
 							Author.name.alias("author"), Publisher.name.alias("publisher"),

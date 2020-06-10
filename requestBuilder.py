@@ -49,6 +49,18 @@ class RequestBuilder:
 		def addBook(bookData: dict):
 			return Request(Controllers.Librarian, "addBook", bookData)
 		
+		@staticmethod
+		def authorsDelete(authorId):
+			return Request(Controllers.Librarian, "deleteAuthor", authorId)
+		
+		@staticmethod
+		def ordersDelete(orderId):
+			return Request(Controllers.Librarian, "deleteOrder", orderId)
+		
+		@staticmethod
+		def publishersDelete(publisherId):
+			return Request(Controllers.Librarian, "deletePublisher", publisherId)
+		
 	class Customer:
 		@staticmethod
 		def getOrders():

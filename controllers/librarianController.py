@@ -23,8 +23,8 @@ class LibrarianController(BaseController):
 		changedTables = ["books"]
 		for bookId, changes in changesContainer.changes.items():
 			BooksRepository.updateBookById(bookId, changes)
-			order = OrdersRepository.getOrderByBookId(bookId)
-			if order is not None and "name" in changes:
+			orders = OrdersRepository.getOrdersByBookId(bookId)
+			if len(orders) > 0 and "name" in changes:
 				changedTables.append("orders")
 			result = self.replaceNamesToIds(changes)
 			if result is not None:
@@ -43,22 +43,57 @@ class LibrarianController(BaseController):
 		orders = OrdersRepository.getAllOrders()
 		return self.ok(orders)
 	
+	def deletePublisher(self, publisherId):
+		tables = {"publishers"}
+		books = BooksRepository.getBooksByPublisherId(publisherId)
+		self.cascadeDelete(books, tables)
+		PublishersRepository.deletePublisherById(publisherId)
+		tables = list(tables)
+		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		self.callChangesEvent(changesEvent)
+		return self.ok(tables)
+	
+	def deleteAuthor(self, authorId):
+		tables = {"authors"}
+		books = BooksRepository.getBooksByAuthorId(authorId)
+		self.cascadeDelete(books, tables)
+		AuthorsRepository.deleteAuthorById(authorId)
+		table = list(tables)
+		changesEvent = ChangesEvent(table, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		self.callChangesEvent(changesEvent)
+		return self.ok(table)
+	
+	@staticmethod
+	def cascadeDelete(books, tables: set):
+		for book in books:
+			tables.add("books")
+			orders = OrdersRepository.getOrdersByBookId(book["id"])
+			for order in orders:
+				tables.add("orders")
+				OrdersRepository.deleteOrderById(order["id"])
+			BooksRepository.deleteBookById(book["id"])
+	
+	def deleteOrder(self, orderId):
+		OrdersRepository.deleteOrderById(orderId)
+		changesEvent = ChangesEvent(["orders"], [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		self.callChangesEvent(changesEvent)
+		return self.ok(["orders"])
+	
 	def deleteBook(self, bookId):
 		tables = ["books"]
-		order = OrdersRepository.getOrderByBookId(bookId)
+		orders = OrdersRepository.getOrdersByBookId(bookId)
 		BooksRepository.deleteBookById(bookId)
-		if order is not None:
+		for order in orders:
 			OrdersRepository.deleteOrderById(order["id"])
 			tables.append("orders")
 		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
 		self.callChangesEvent(changesEvent)
-		body = ["orders"] if order is not None else []
-		return self.ok(body)
+		return self.ok(tables)
 
 	def getBooks(self, filterParams: dict):
 		result = self.replaceNamesToIds(filterParams)
 		if result is not None:
-			return result
+			return self.ok(body=[])
 		books = BooksRepository.getBooks(filterParams)
 		return self.ok(body=books)
 	
