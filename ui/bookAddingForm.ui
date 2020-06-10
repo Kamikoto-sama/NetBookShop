@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>272</width>
-    <height>278</height>
+    <height>335</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,13 +49,29 @@
         </property>
        </widget>
       </item>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QLineEdit" name="pageCountEdit">
-        <property name="placeholderText">
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
          <string>Page count</string>
         </property>
-        <property name="clearButtonEnabled">
-         <bool>false</bool>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QSpinBox" name="pageCountEdit">
+        <property name="suffix">
+         <string/>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+        <property name="displayIntegerBase">
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -71,11 +87,6 @@
         <property name="editable">
          <bool>true</bool>
         </property>
-        <item>
-         <property name="text">
-          <string/>
-         </property>
-        </item>
        </widget>
       </item>
       <item>
@@ -90,24 +101,48 @@
         <property name="editable">
          <bool>true</bool>
         </property>
-        <item>
-         <property name="text">
-          <string/>
-         </property>
-        </item>
        </widget>
       </item>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QLineEdit" name="countEdit">
-        <property name="placeholderText">
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
          <string>Count</string>
         </property>
        </widget>
       </item>
       <item alignment="Qt::AlignLeft">
-       <widget class="QLineEdit" name="priceEdit">
-        <property name="placeholderText">
+       <widget class="QSpinBox" name="countEdit">
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::UpDownArrows</enum>
+        </property>
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
          <string>Price</string>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QDoubleSpinBox" name="priceEdit">
+        <property name="locale">
+         <locale language="English" country="UnitedStates"/>
+        </property>
+        <property name="suffix">
+         <string>$</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>999999.000000000000000</double>
         </property>
        </widget>
       </item>

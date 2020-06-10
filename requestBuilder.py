@@ -45,6 +45,10 @@ class RequestBuilder:
 		def booksUpdate(changes: EntityChanges):
 			return Request(Controllers.Librarian, "updateBooks", changes.toJson())
 		
+		@staticmethod
+		def addBook(bookData: dict):
+			return Request(Controllers.Librarian, "addBook", bookData)
+		
 	class Customer:
 		@staticmethod
 		def getOrders():

@@ -20,6 +20,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	itemDeletedEvent = pyqtSignal(object)
 	pageInitialDataReceivedEvent = pyqtSignal(object)
 	changesSavedEvent = pyqtSignal(object)
+	itemAddedEvent = pyqtSignal(object)
 	
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
@@ -75,15 +76,26 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.changesSavedEvent.connect(self.onChangesSaved)
 		
 		self.bookAddBtn.clicked.connect(lambda: self.addItem("books"))
-		self.booksAddingForm = BookAddingForm(self, clientWorker)
+		self.booksAddingForm = BookAddingForm(self)
+		self.itemAddedEvent.connect(self.onItemAdded)
+		
+	def onItemAdded(self, response: Response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.message)
+			return
+		self.updateTable(self.processingTableName)
 		
 	def addItem(self, tableName):
 		addingForm = getattr(self, tableName + "AddingForm")
+		if tableName in ["books", "authors"]:
+			authorsNames = [self.authorsList.itemText(i) for i in range(self.authorsList.count())]
+			addingForm.fillAuthorsList(authorsNames)
+		if tableName in ["books", "publishers"]:
+			publishersNames = [self.publishersList.itemText(i) for i in range(self.publishersList.count())]
+			addingForm.fillPublishersList(publishersNames)
 		addingForm.show()
-		if tableName == "books":
-			authors = self.authorsList.items
-			addingForm.init()
-		
+
 	def onChangesSaved(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:

@@ -8,6 +8,10 @@ from repositories.publishersRepository import PublishersRepository
 
 class LibrarianController(BaseController):
 	allowedRole = Role.LIBRARIAN
+	
+	def addBook(self, bookData: dict):
+		book = BooksRepository.addBook(bookData)
+		return self.ok(book)
 
 	def updateBooks(self, changesData: str):
 		changesContainer = EntityChanges.fromJson(changesData)
