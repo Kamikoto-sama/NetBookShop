@@ -20,7 +20,7 @@ class OrdersRepository:
 	
 	@staticmethod
 	def getOrderByBookId(bookId):
-		order = Order.select().where(Order.book == Book.get(bookId)).dicts().first()
+		order = Order.select().where(Order.book == Book.get(id=bookId)).dicts().first()
 		return order
 	
 	@staticmethod

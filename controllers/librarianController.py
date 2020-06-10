@@ -10,7 +10,12 @@ class LibrarianController(BaseController):
 	allowedRole = Role.LIBRARIAN
 	
 	def addBook(self, bookData: dict):
+		result = self.replaceNamesToIds(bookData)
+		if result is not None:
+			return result
 		book = BooksRepository.addBook(bookData)
+		changesEvent = ChangesEvent(["books"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.id)
+		self.callChangesEvent(changesEvent)
 		return self.ok(book)
 
 	def updateBooks(self, changesData: str):
@@ -37,12 +42,13 @@ class LibrarianController(BaseController):
 	def getAllOrders(self):
 		orders = OrdersRepository.getAllOrders()
 		return self.ok(orders)
-
+	
 	def deleteBook(self, bookId):
 		tables = ["books"]
 		order = OrdersRepository.getOrderByBookId(bookId)
 		BooksRepository.deleteBookById(bookId)
 		if order is not None:
+			OrdersRepository.deleteOrderById(order["id"])
 			tables.append("orders")
 		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
 		self.callChangesEvent(changesEvent)
