@@ -5,10 +5,12 @@ from PyQt5.QtCore import pyqtSignal, Qt, QMimeData
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView, QPushButton, QComboBox
 
+from authorAddingForm import AuthorAddingForm
 from bookAddingForm import BookAddingForm
 from clientWorker import ClientWorker
 from models import Response, EntityChanges
 from processingForm import ProcessingForm
+from publisherAddingForm import PublisherAddingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.librarianForm import Ui_librarianForm
 
@@ -79,18 +81,27 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.changesSavedEvent.connect(self.onChangesSaved)
 		
 		self.bookAddBtn.clicked.connect(lambda: self.addItem("books"))
+		self.authorAddBtn.clicked.connect(lambda: self.addItem("authors"))
+		self.publisherAddBtn.clicked.connect(lambda: self.addItem("publishers"))
 		self.booksAddingForm = BookAddingForm(self)
+		self.authorsAddingForm = AuthorAddingForm(self)
+		self.publishersAddingForm = PublisherAddingForm(self)
 		self.itemAddedEvent.connect(self.onItemAdded)
 		
 		self.searchAuthorBtn.clicked.connect(lambda: self.applyNameFilter("authors"))
 		self.searchPublisherBtn.clicked.connect(lambda: self.applyNameFilter("publishers"))
-		self.resetAuthorsBtn.clicked.connect(lambda: self.updateTable("authors"))
-		self.resetPublishersBtn.clicked.connect(lambda: self.updateTable("publishers"))
+		self.resetAuthorsBtn.clicked.connect(lambda: self.resetNameFilter("authors"))
+		self.resetPublishersBtn.clicked.connect(lambda: self.resetNameFilter("publishers"))
 		
-	def applyNameFilter(self, tableName, reset=False):
+	def resetNameFilter(self, tableName):
+		self.updateTable(tableName)
+		self.changes[tableName].clearChanges()
+		getattr(self, tableName + "SaveChangesBtn").setDisabled(True)
+		
+	def applyNameFilter(self, tableName):
 		nameList: QComboBox = getattr(self, tableName + "List2")
 		name = nameList.currentText()
-		if name == "" and not reset:
+		if name == "":
 			return
 		table: QTableWidget = getattr(self, tableName + "Table")
 		items = table.findItems(name, Qt.MatchContains)
@@ -114,12 +125,10 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		
 	def addItem(self, tableName):
 		addingForm = getattr(self, tableName + "AddingForm")
-		if tableName in ["books", "authors"]:
+		if tableName == "books":
 			authorsNames = [self.authorsList.itemText(i) for i in range(self.authorsList.count())]
-			addingForm.fillAuthorsList(authorsNames)
-		if tableName in ["books", "publishers"]:
 			publishersNames = [self.publishersList.itemText(i) for i in range(self.publishersList.count())]
-			addingForm.fillPublishersList(publishersNames)
+			addingForm.fillLists(authorsNames, publishersNames)
 		addingForm.show()
 
 	def onChangesSaved(self, response: Response):
@@ -244,6 +253,8 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.genreFilterEdit.clear()
 		self.authorsList.setCurrentIndex(0)
 		self.publishersList.setCurrentIndex(0)
+		self.changes["books"].clearChanges()
+		self.booksSaveChangesBtn.setDisabled(True)
 		self.applyFilter(True)
 
 	def applyFilter(self, reset=False):

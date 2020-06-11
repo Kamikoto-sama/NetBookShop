@@ -46,8 +46,24 @@ class RequestBuilder:
 			return Request(Controllers.Librarian, "updateBooks", changes.toJson())
 		
 		@staticmethod
+		def authorsUpdate(changes: EntityChanges):
+			return Request(Controllers.Librarian, "updateAuthors", changes.toJson())
+
+		@staticmethod
+		def publishersUpdate(changes: EntityChanges):
+			return Request(Controllers.Librarian, "updatePublishers", changes.toJson())
+		
+		@staticmethod
 		def addBook(bookData: dict):
 			return Request(Controllers.Librarian, "addBook", bookData)
+		
+		@staticmethod
+		def addAuthor(authorData: dict):
+			return Request(Controllers.Librarian, "addAuthor", authorData)
+
+		@staticmethod
+		def addPublisher(publisherData: dict):
+			return Request(Controllers.Librarian, "addPublisher", publisherData)
 		
 		@staticmethod
 		def authorsDelete(authorId):

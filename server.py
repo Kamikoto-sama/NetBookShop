@@ -37,7 +37,7 @@ class Server:
 		clientHandler.onClientDisconnected = self.onClientDisconnected
 		clientHandler.start()
 
-		print(f"\rClient #{clientHandler.index} {clientHandler.clientAddress} has connected")
+		print(f"\rClient #{clientHandler.index} {clientHandler.address} has connected")
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesEvent):
 		client: ClientHandler = None
@@ -60,7 +60,7 @@ class Server:
 		
 	def onClientDisconnected(self, client: ClientHandler):
 		self.clients.pop(client.index)
-		print(f"\rClient #{client.index} {client.clientAddress} has disconnected")
+		print(f"\rClient #{client.index} {client.address} has disconnected")
 
 	def stop(self):
 		self.__isWorking = False

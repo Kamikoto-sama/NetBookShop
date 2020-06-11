@@ -33,7 +33,7 @@ class OrdersRepository:
 
 	@staticmethod
 	def getOrderById(orderId) -> Order:
-		order = Order.get(orderId)
+		order = Order.get(id=orderId)
 		return order
 
 	@staticmethod

@@ -2,7 +2,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox
 
-from clientWorker import ClientWorker
 from requestBuilder import RequestBuilder
 from ui.convertedUi.bookAddingForm import Ui_bookAddingForm
 
@@ -14,10 +13,8 @@ class BookAddingForm(QWidget, Ui_bookAddingForm):
 		self.addBtn.clicked.connect(self.addBook)
 		self.parent = parent
 		
-	def fillAuthorsList(self, authorsNames):
+	def fillLists(self, authorsNames, publishersNames):
 		self.authorsList.addItems(authorsNames)
-		
-	def fillPublishersList(self, publishersNames):
 		self.publishersList.addItems(publishersNames)
 		
 	def addBook(self):

@@ -1,6 +1,11 @@
 from sqlite3 import Connection
 from threading import Thread
 
+from peewee import SqliteDatabase
+
+from clientHandler import ClientHandler
+
+
 class ServerTerminal(Thread):
 	commands: dict
 
@@ -15,8 +20,8 @@ class ServerTerminal(Thread):
 			'sql': self.runSql,
 			'clients': self.listClients,
 			'disconnect': self.disconnectClient,
-			'commands': self.showCommands,
 			'send': self.sendMessageToClient,
+			'?': self.showCommands,
 		}
 		
 	def sendMessageToClient(self, clientIndex, *message):
@@ -40,17 +45,17 @@ class ServerTerminal(Thread):
 		
 	def showCommands(self):
 		print("Supported commands:")
-		for command in self.commands:
-			print(command)
+		[print(command) for command in self.commands if command != "?"]
 		
 	def listClients(self):
 		clients = self.server.clients.values()
 		print("Connected clients:" if len(clients) > 0 else "No clients connected")
+		client: ClientHandler
 		for client in clients:
-			print(client.index, client.address, client.connectionTime)
+			print(f"#{client.index} {client.role} connected at {client.connectionTime} from {client.address}")
 
 	def runSql(self):
-		db = self.dbProvider.getDbConnection()
+		from dataBaseContext import db
 		while 1:
 			query = input("sql>")
 			if query == "q":
@@ -58,9 +63,9 @@ class ServerTerminal(Thread):
 			self.executeSqlQuery(db, query)
 
 	@staticmethod
-	def executeSqlQuery(db: Connection, query):
+	def executeSqlQuery(db: SqliteDatabase, query):
 		try:
-			res = db.execute(query)
+			res = db.execute_sql(query)
 		except Exception as e:
 			print(e)
 			return

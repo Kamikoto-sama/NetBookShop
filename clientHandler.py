@@ -11,7 +11,7 @@ class ClientHandler(Thread):
 	def __init__(self, clientInfo: ClientInfo, clientIndex, changesEvent):
 		super().__init__()
 		self.connection: socket = clientInfo.connection
-		self.clientAddress = clientInfo.fullAddress 
+		self.address = clientInfo.fullAddress 
 		self.index = clientIndex
 		self.connectionTime = datetime.now().strftime("%H:%M:%S")
 		self.requestHandler = RequestHandler(changesEvent)
@@ -51,4 +51,7 @@ class ClientHandler(Thread):
 
 	def respond(self, data: str):
 		data = data.encode(dataPackageEncoding) + dataClosingSequence
-		self.connection.sendall(data)
+		try:
+			self.connection.sendall(data)
+		except ConnectionError:
+			self.onClientDisconnected(self)
