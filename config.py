@@ -1,7 +1,7 @@
 dataClosingSequence = b"\r\n\r\n"
 dataPackageSize = 1024
 dataPackageEncoding = "utf-8"
-appAddress = "localhost"
+appAddress = "192.168.0.108"
 appPort = 2001
 accessCode = "22848"
 timeFormat = "%H:%M:%S"
