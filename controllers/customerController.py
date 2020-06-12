@@ -9,6 +9,18 @@ from repositories.publishersRepository import PublishersRepository
 class CustomerController(BaseController):
 	allowedRole = Role.CUSTOMER
 
+	def getPublisherByName(self, publisherName):
+		publisher = PublishersRepository.getPublisherByName(publisherName)
+		if publisher is None:
+			return self.badRequest("Unknown publisher")
+		return self.ok(publisher)
+	
+	def getAuthorByName(self, authorName):
+		author = AuthorsRepository.getAuthorByName(authorName)
+		if author is None:
+			return self.badRequest("Unknown author")
+		return self.ok(author)
+
 	def getOrders(self):
 		orders = OrdersRepository.getUserOrders(self.userInfo.id)
 		return self.ok(body=orders)

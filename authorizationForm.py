@@ -83,7 +83,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 		self.processingForm.hide()
 		if not response.succeed:
 			title = "Invalid data"
-			message = response.message
+			message = response.errorMessage
 			QMessageBox().warning(self, title, message)
 			return
 		self.onAuthorized(response.body["role"])

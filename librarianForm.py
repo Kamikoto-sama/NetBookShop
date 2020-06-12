@@ -119,7 +119,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	def onItemAdded(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		self.updateTable(self.processingTableName)
 		
@@ -134,7 +134,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	def onChangesSaved(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		getattr(self, self.processingTableName + "SaveChangesBtn").setDisabled(True)
 		self.changes[self.processingTableName].clearChanges()
@@ -173,7 +173,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.processingForm.hide()
 		getattr(self, self.processingTableName + "UpdateBtn").hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return 
 		table = getattr(self, self.processingTableName + "Table")
 		self.fillTable(table, self.processingTableName, response.body)
@@ -206,7 +206,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	def onItemDeleted(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		for tableName in response.body:
 			self.updateTable(tableName)
@@ -302,7 +302,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 	def initBooksPage(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])

@@ -9,7 +9,7 @@ class AuthorsRepository:
 		return author
 
 	@staticmethod
-	def getAuthorByName(authorName):
+	def getAuthorByName(authorName) -> dict:
 		author = Author.select().where(Author.name == authorName).dicts().first()
 		return author
 	

@@ -4,6 +4,8 @@ from threading import Thread
 from peewee import SqliteDatabase
 
 from clientHandler import ClientHandler
+from logger import Logger
+from models import Request
 
 
 class ServerTerminal(Thread):
@@ -22,37 +24,78 @@ class ServerTerminal(Thread):
 			'disconnect': self.disconnectClient,
 			'send': self.sendMessageToClient,
 			'?': self.showCommands,
+			'request': self.makeRequest,
 		}
 		
-	def sendMessageToClient(self, clientIndex, *message):
+	def run(self):
+		while self.server.isWorking:
+			command = input(">")
+			if command == "":
+				continue
+			self.executeCommand(command)
+
+	def executeCommand(self, command):
+		try:
+			commandName, *params = command.split()
+			if commandName not in self.commands:
+				Logger.commandMessage("Unknown command")
+				return
+			self.commands[commandName](*params)
+		except Exception as e:
+			Logger.commandMessage(e)
+			
+	def makeRequest(self, clientIndex, requestRoute: str, body=None):
+		if "/" not in requestRoute:
+			Logger.commandMessage("Invalid route")
+			return
+		controller, action = requestRoute.split("/", 1)
+		client: ClientHandler = self.getClient(clientIndex)
+		if client is None:
+			return
+		request = Request(controller, action, body)
+		response = client.requestHandler.handle(request.toJson(), clientIndex)
+		if not response.succeed:
+			Logger.commandMessage(response.errorMessage)
+		elif response.body is None:
+			Logger.commandMessage("No content")
+		elif isinstance(response.body, list):
+			if len(response.body) > 0:
+				[Logger.commandMessage(i) for i in response.body]
+			else:
+				Logger.commandMessage("No content")
+		else:
+			Logger.commandMessage(response.body)
+		
+
+	def sendMessageToClient(self, clientIndex, message, *messages):
 		client = self.getClient(clientIndex)
 		if client is None:
 			return 
-		client.respond(' '.join(message))
-		
+		client.respond(' '.join([message, *messages]))
+	
 	def disconnectClient(self, clientIndex):
 		client = self.getClient(clientIndex)
 		if client is None:
 			return 
 		client.disconnect()
-	
+		
 	def getClient(self, clientIndex):
 		clientIndex = int(clientIndex)
 		if not clientIndex in self.server.clients:
-			print(f"No such client {clientIndex}")
+			Logger.commandMessage(f"No such client {clientIndex}")
 			return
 		return self.server.clients[clientIndex]
 		
 	def showCommands(self):
-		print("Supported commands:")
-		[print(command) for command in self.commands if command != "?"]
-		
+		Logger.commandMessage("Supported commands:")
+		[Logger.commandMessage(command) for command in self.commands if command != "?"]
+
 	def listClients(self):
 		clients = self.server.clients.values()
-		print("Connected clients:" if len(clients) > 0 else "No clients connected")
+		Logger.commandMessage("Connected clients:" if len(clients) > 0 else "No clients connected")
 		client: ClientHandler
 		for client in clients:
-			print(f"#{client.index} {client.role} connected at {client.connectionTime} from {client.address}")
+			Logger.commandMessage(f"#{client.index} {client.role} connected at {client.connectionTime} from {client.address}")
 
 	def runSql(self):
 		from dataBaseContext import db
@@ -67,27 +110,10 @@ class ServerTerminal(Thread):
 		try:
 			res = db.execute_sql(query)
 		except Exception as e:
-			print(e)
+			Logger.commandMessage(e)
 			return
 		if query[:6].lower() in ["select", "pragma"]:
 			for row in list(res):
-				print(row)
+				Logger.commandMessage(row)
 		else:
 			db.commit()
-
-	def run(self):
-		while self.server.isWorking:
-			command = input(">")
-			if command == "":
-				continue
-			self.executeCommand(command)
-
-	def executeCommand(self, command):
-		try:
-			commandName, *params = command.split()
-			if commandName not in self.commands:
-				print("Unknown command")
-				return
-			self.commands[commandName](*params)
-		except Exception as e:
-			print(e)

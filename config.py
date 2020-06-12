@@ -4,3 +4,6 @@ dataPackageEncoding = "utf-8"
 appAddress = "localhost"
 appPort = 2001
 accessCode = "22848"
+timeFormat = "%H:%M:%S"
+dateTimeFormat = "%d.%m.%Y %H:%M"
+dateFormat = "%d.%m.%Y"

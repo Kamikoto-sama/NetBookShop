@@ -2,7 +2,7 @@ from datetime import datetime
 from socket import socket
 from threading import Thread
 
-from config import dataPackageEncoding, dataClosingSequence, dataPackageSize
+from config import dataPackageEncoding, dataClosingSequence, dataPackageSize, timeFormat
 from models import ClientInfo
 from requestHandler import RequestHandler
 
@@ -13,9 +13,10 @@ class ClientHandler(Thread):
 		self.connection: socket = clientInfo.connection
 		self.address = clientInfo.fullAddress 
 		self.index = clientIndex
-		self.connectionTime = datetime.now().strftime("%H:%M:%S")
+		self.connectionTime = datetime.now().strftime(timeFormat)
 		self.requestHandler = RequestHandler(changesEvent)
 		self.onClientDisconnected = lambda *_: None
+		self.pendedToDisconnect = False
 		
 	@property
 	def role(self):
@@ -26,6 +27,7 @@ class ClientHandler(Thread):
 		return self.requestHandler.userInfo.id
 		
 	def disconnect(self):
+		self.pendedToDisconnect = True
 		self.connection.close()
 		
 	def run(self):
@@ -36,7 +38,8 @@ class ClientHandler(Thread):
 				requestData = ''.join(requestParts)[:-len(dataClosingSequence)]
 				self.handleRequest(requestData)
 				requestParts = []
-		self.onClientDisconnected(self)
+		if not self.pendedToDisconnect:
+			self.onClientDisconnected(self)
 		
 	def getDataPackage(self):
 		try:

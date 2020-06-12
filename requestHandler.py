@@ -1,5 +1,6 @@
 from controllers import BaseController
 from controllersMap import Controllers
+from logger import Logger
 from models import Request, UserInfo
 
 
@@ -11,10 +12,10 @@ class RequestHandler:
 
 	def handle(self, requestData, clientIndex):
 		request = Request.fromJson(requestData)
-		print(f"Client #{clientIndex} requested {request.controller}/{request.action}")
+		Logger.log(f"Client #{clientIndex} requested {request.controller}/{request.action}")
 		
 		if request.controller not in Controllers.routes:
-			message = f"Unknown controller"
+			message = f"Unknown controller {request.controller}"
 			return BaseController.badRequest(message)
 		controller = Controllers.routes[request.controller]
 		if controller.allowedRole != self.userInfo.role:

@@ -157,12 +157,6 @@ class LibrarianController(BaseController):
 		authors = AuthorsRepository.getAllAuthors()
 		return self.ok(authors)
 	
-	def getAuthorByName(self, authorName):
-		author = AuthorsRepository.getAuthorByName(authorName)
-		if author is None:
-			return self.badRequest("Unknown author")
-		self.ok(author)
-
 	def getBooksPageData(self):
 		books = BooksRepository.getBooks({})
 		authors = AuthorsRepository.getAllAuthors()

@@ -12,11 +12,10 @@ class ClientInfo:
 		self.fullAddress = f"{self.ipAddress}:{self.port}"
 		
 class Request:
-	def __init__(self, controller, action, body:dict=None, syncDbChanges = False):
+	def __init__(self, controller, action, body:dict=None):
 		self.controller = controller
 		self.action = action
 		self.body = body
-		self.syncDbChanges = syncDbChanges
 		
 	@staticmethod
 	def fromJson(requestJson):
@@ -24,30 +23,28 @@ class Request:
 		controller = jsonRequest["controller"]
 		action = jsonRequest["action"]
 		body = jsonRequest["body"]
-		syncDbChanges = jsonRequest["syncDbChanges"]
-		return Request(controller, action, body, syncDbChanges)
+		return Request(controller, action, body)
 		
 	def toJson(self):
 		requestDict = {
 			"controller": self.controller,
 			"action": self.action,
 			"body": self.body,
-			"syncDbChanges": self.syncDbChanges
 		}
 		requestJson = JSONEncoder().encode(requestDict)
 		return requestJson
 		
 class Response:
-	def __init__(self, succeed:bool, message:str, body:dict=None, changes:bool=False):
+	def __init__(self, succeed:bool, errorMessage:str, body:dict=None, changes:bool=False):
 		self.changes = changes
 		self.body = body
-		self.message = message
+		self.errorMessage = errorMessage
 		self.succeed = succeed
 		
 	def toJson(self):
 		responseDict = {
 			"succeed": self.succeed,
-			"message": self.message,
+			"errorMessage": self.errorMessage,
 			"changes": self.changes,
 			"body": self.body
 		}
@@ -58,10 +55,10 @@ class Response:
 	def fromJson(responseJson):
 		jsonResponse = JSONDecoder().decode(responseJson)
 		body = jsonResponse["body"]
-		message = jsonResponse["message"]
+		errorMessage = jsonResponse["errorMessage"]
 		succeed = jsonResponse["succeed"]
 		changes = jsonResponse["changes"]
-		return Response(succeed, message, body, changes)
+		return Response(succeed, errorMessage, body, changes)
 	
 class Role:
 	CUSTOMER = "customer"

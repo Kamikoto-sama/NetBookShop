@@ -2,6 +2,7 @@ import socket as Socket
 from threading import Thread
 
 from clientHandler import ClientHandler
+from logger import Logger
 from models import ClientInfo, ChangesEvent, Response
 
 
@@ -37,7 +38,7 @@ class Server:
 		clientHandler.onClientDisconnected = self.onClientDisconnected
 		clientHandler.start()
 
-		print(f"\rClient #{clientHandler.index} {clientHandler.address} has connected")
+		Logger.log(f"Client #{clientHandler.index} {clientHandler.address} has connected")
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesEvent):
 		client: ClientHandler = None
@@ -60,11 +61,11 @@ class Server:
 		
 	def onClientDisconnected(self, client: ClientHandler):
 		self.clients.pop(client.index)
-		print(f"\rClient #{client.index} {client.address} has disconnected")
+		Logger.log(f"Client #{client.index} {client.address} has disconnected")
 
 	def stop(self):
 		self.__isWorking = False
 		self.socket.close()
 		for client in self.clients.values():
 			client.disconnect()
-		print("Server has stopped")
+		Logger.commandMessage("Server has stopped")

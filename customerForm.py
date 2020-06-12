@@ -4,9 +4,11 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget, QHeaderView
 
+from authorAddingForm import AuthorAddingForm
 from clientWorker import ClientWorker
 from models import Response, ChangesEvent
 from processingForm import ProcessingForm
+from publisherAddingForm import PublisherAddingForm
 from requestBuilder import RequestBuilder
 from ui.convertedUi.customerForm import Ui_customerForm
 
@@ -18,6 +20,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	orderMadeEvent = pyqtSignal(object)
 	orderCanceledEvent = pyqtSignal(object)
 	filteredBooksReceivedEvent = pyqtSignal(object)
+	itemInfoReceivedEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
 		self.setupUi(self)
@@ -55,6 +58,33 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.ordersUpdateBtn.clicked.connect(lambda: self.updateTable("orders"))
 
 		self.configureTables()
+		self.booksTable.itemDoubleClicked.connect(self.showItemInfo)
+		self.itemInfoReceivedEvent.connect(self.onItemInfoReceived)
+		self.authorInfoForm = AuthorAddingForm(self, True)
+		self.publisherInfoForm = PublisherAddingForm(self, True)
+
+	def onItemInfoReceived(self, response: Response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.errorMessage)
+			return 
+		getattr(self, self.requestedItemInfo + "InfoForm").showInfo(response.body)
+		
+	def showItemInfo(self, item: QTableWidgetItem):
+		column = item.column()
+		if column not in [3, 4]:
+			return 
+		name = item.text()
+		if column == 3:
+			request = RequestBuilder.Customer.getAuthorByName(name)
+			self.requestedItemInfo = "author"
+		else:
+			request = RequestBuilder.Customer.getPublisherByName(name)
+			self.requestedItemInfo = "publisher"
+
+		self.processingForm.show()
+		handler = lambda res: self.itemInfoReceivedEvent.emit(res)
+		self.clientWorker.requestData(request, handler)
 
 	def configureTables(self):
 		for tableName in self.itemsMap:
@@ -121,7 +151,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	def onOrderCanceled(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		self.ordersTable.removeRow(self.requestedItemInfo)
 		self.itemsMap["orders"].pop(self.requestedItemInfo)
@@ -183,7 +213,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	def initBooksPage(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		self.authorsList.addItems(response.body["authorsNames"])
 		self.publishersList.addItems(response.body["publishersNames"])
@@ -200,7 +230,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 		
 	def initOrdersPage(self, response: Response):
 		if not response.succeed:
-			self.showErrorMessage("User orders fetch error", response.message)
+			self.showErrorMessage("User orders fetch error", response.errorMessage)
 			return
 		self.fillTable(self.ordersTable, "orders", response.body)
 		

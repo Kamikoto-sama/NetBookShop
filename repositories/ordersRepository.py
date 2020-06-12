@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List
 
+from config import dateTimeFormat
 from dataBaseContext import Order, User, Book
 
 
@@ -8,7 +9,7 @@ class OrdersRepository:
 
 	@staticmethod
 	def addOrder(userId, bookId) -> dict:
-		today = datetime.today().strftime("%d.%m.%Y %H:%M")
+		today = datetime.today().strftime(dateTimeFormat)
 		order = Order.create(user=userId, book=bookId, date=today)
 		return {"id":order.id, "bookName":order.book.name, "userName":order.user.login, "date":order.date}
 

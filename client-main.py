@@ -27,7 +27,6 @@ class Main:
 			self.librarianForm.init()
 		else:
 			message = f"Unknown role {role}"
-			print(message)
 			self.authForm.showErrorMessage(message)
 		self.authForm.close()
 

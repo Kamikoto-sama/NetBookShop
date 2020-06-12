@@ -18,10 +18,6 @@ class RequestBuilder:
 			return Request(Controllers.Librarian, "getBooksPageData")
 		
 		@staticmethod
-		def getAuthorByName(authorName):
-			return Request(Controllers.Librarian, "getAuthorByName", authorName)
-		
-		@staticmethod
 		def getBooks(filterParams: dict):
 			return Request(Controllers.Librarian, "getBooks", filterParams)
 		
@@ -97,3 +93,11 @@ class RequestBuilder:
 		@staticmethod
 		def getBooksPageData():
 			return Request(Controllers.Customer, "getBooksPageData")
+
+		@staticmethod
+		def getAuthorByName(authorName):
+			return Request(Controllers.Customer, "getAuthorByName", authorName)
+
+		@staticmethod
+		def getPublisherByName(publisherName):
+			return Request(Controllers.Customer, "getPublisherByName", publisherName)

@@ -1,4 +1,5 @@
 import socket as Socket
+from json import JSONDecodeError
 from threading import Thread
 
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -27,7 +28,6 @@ class ClientWorker(Thread):
 			self.socket.connect((self.address, self.port))
 		except ConnectionRefusedError:
 			return False
-		print("Connected")
 		return True
 	
 	def closeConnection(self):
@@ -56,8 +56,16 @@ class ClientWorker(Thread):
 		self.responseQueue.append(responseCallback)
 		self.socket.sendall(requestData)
 
-	def handleResponse(self, responseData):
-		response = Response.fromJson(responseData)
+	def handleResponse(self, responseData: str):
+		try:
+			response = Response.fromJson(responseData)
+		except JSONDecodeError:
+			message = f"Invalid data received: {responseData}"
+			if responseData.startswith("-m"):
+				serverMessage = responseData[2:]
+				message = f"Message from server:\n{serverMessage}"
+			self.onError(message)
+			return 
 		if response.changes:
 			self.onChangesReceived(response)
 		elif len(self.responseQueue) > 0:
