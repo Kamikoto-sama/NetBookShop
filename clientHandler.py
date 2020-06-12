@@ -27,7 +27,6 @@ class ClientHandler(Thread):
 		return self.requestHandler.userInfo.id
 		
 	def disconnect(self):
-		self.pendedToDisconnect = True
 		self.connection.close()
 		
 	def run(self):

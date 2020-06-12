@@ -66,6 +66,8 @@ class Server:
 	def stop(self):
 		self.__isWorking = False
 		self.socket.close()
+		client: ClientHandler
 		for client in self.clients.values():
+			client.pendedToDisconnect = True
 			client.disconnect()
 		Logger.commandMessage("Server has stopped")
