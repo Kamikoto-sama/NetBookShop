@@ -70,4 +70,4 @@ class Server:
 		for client in self.clients.values():
 			client.pendedToDisconnect = True
 			client.disconnect()
-		Logger.commandMessage("Server has stopped")
+		Logger.command("Server has stopped")

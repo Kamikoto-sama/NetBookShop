@@ -4,5 +4,5 @@ class Logger:
 		print(f"\r{obj}\n>", end="")
 		
 	@staticmethod
-	def commandMessage(obj):
+	def command(obj):
 		print(f"\r{obj}")
