@@ -41,7 +41,6 @@ class Server:
 		Logger.log(f"Client #{clientHandler.index} {clientHandler.address} has connected")
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesEvent):
-		client: ClientHandler = None
 		for client in self.clients.values():
 			condition = not client.role in updateEvent.roles
 			condition = condition and client.userId != updateEvent.includeClientId

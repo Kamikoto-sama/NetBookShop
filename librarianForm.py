@@ -66,13 +66,13 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.pageInitialDataReceivedEvent.connect(self.initPage)
 		self.processingTableName = None
 		
-		self.selectedCell = None
+		self.editingTableName = None
 		self.booksTable.itemChanged.connect(lambda item: self.onCellChanged(item, "books"))
 		self.authorsTable.itemChanged.connect(lambda item: self.onCellChanged(item, "authors"))
 		self.publishersTable.itemChanged.connect(lambda item: self.onCellChanged(item, "publishers"))
-		self.booksTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
-		self.authorsTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
-		self.publishersTable.itemDoubleClicked.connect(lambda item: setattr(self, "selectedCell", item))
+		self.booksTable.itemDoubleClicked.connect(lambda _: setattr(self, "editingTableName", "books"))
+		self.authorsTable.itemDoubleClicked.connect(lambda _: setattr(self, "editingTableName", "authors"))
+		self.publishersTable.itemDoubleClicked.connect(lambda _: setattr(self, "editingTableName", "publishers"))
 		self.entitiesFields: Dict[list] = {}
 		self.booksSaveChangesBtn.clicked.connect(lambda: self.saveChanges("books"))
 		self.authorsSaveChangesBtn.clicked.connect(lambda: self.saveChanges("authors"))
@@ -88,8 +88,8 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.publishersAddingForm = PublisherAddingForm(self)
 		self.itemAddedEvent.connect(self.onItemAdded)
 		
-		self.searchAuthorBtn.clicked.connect(lambda: self.applyNameFilter("authors"))
-		self.searchPublisherBtn.clicked.connect(lambda: self.applyNameFilter("publishers"))
+		self.authorsSearchBtn.clicked.connect(lambda: self.applyNameFilter("authors"))
+		self.publishersSearchBtn.clicked.connect(lambda: self.applyNameFilter("publishers"))
 		self.resetAuthorsBtn.clicked.connect(lambda: self.resetNameFilter("authors"))
 		self.resetPublishersBtn.clicked.connect(lambda: self.resetNameFilter("publishers"))
 		
@@ -97,6 +97,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.updateTable(tableName)
 		self.changes[tableName].clearChanges()
 		getattr(self, tableName + "SaveChangesBtn").setDisabled(True)
+		getattr(self, tableName + "SearchBtn").setEnabled(True)
 		
 	def applyNameFilter(self, tableName):
 		nameList: QComboBox = getattr(self, tableName + "List2")
@@ -115,6 +116,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		table.clearContents()
 		self.itemsMap[tableName].clear()
 		self.fillTable(table, tableName, [entity])
+		getattr(self, tableName + "SearchBtn").setDisabled(True)
 		
 	def onItemAdded(self, response: Response):
 		self.processingForm.hide()
@@ -143,6 +145,7 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 
 	def saveChanges(self, tableName):
 		self.processingForm.show()
+		self.editingTableName = None
 		self.processingTableName = tableName
 		request = getattr(RequestBuilder.Librarian, tableName + "Update")(self.changes[tableName])
 		resHandler = lambda res: self.changesSavedEvent.emit(res)
@@ -155,11 +158,9 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.entitiesFields[entityName] = [field for field in entity.keys() if field != "id"]
 		
 	def onCellChanged(self, item: QTableWidgetItem, tableName):
-		if self.selectedCell != item:
-			self.selectedCell = None
+		if self.editingTableName != tableName:
 			return
 		value = item.text()
-		self.selectedCell = None
 		if value == "":
 			self.showInvalidOperationMessage("Field can't be empty. Changes unsaved")
 			return 
@@ -245,8 +246,8 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 				updateMessageTables.append(tableName)
 		if len(updateMessageTables) == 0:
 			return
-		message = f"Some data has changed in: {', '.join(updateMessageTables)}"
-		QMessageBox().information(self, "Changes update", message)
+		# message = f"Some data has changed in: {', '.join(updateMessageTables)}"
+		# QMessageBox().information(self, "Changes update", message)
 
 	def resetFilter(self):
 		self.nameFilterEdit.clear()

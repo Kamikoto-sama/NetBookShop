@@ -112,8 +112,8 @@ class CustomerForm(Ui_customerForm, QWidget):
 				updateMessageTables.append(tableName)
 		if len(updateMessageTables) == 0:
 			return
-		message = f"Some data has changed in: {', '.join(updateMessageTables)}"
-		QMessageBox().information(self, "Changes update", message)
+		# message = f"Some data has changed in: {', '.join(updateMessageTables)}"
+		# QMessageBox().information(self, "Changes update", message)
 
 	def fillFilteredBooks(self, response):
 		self.processingForm.hide()

@@ -1,4 +1,4 @@
-from config import accessCode
+from accessCodeProvider import AccessCodeProvider
 from controllers.baseController import BaseController
 from dataBaseContext import User
 from models import Role
@@ -11,7 +11,7 @@ class AuthController(BaseController):
 		if UserRepository.findUserByLogin(loginData["login"]) is not None:
 			return self.badRequest("This login has already registered")
 		if "accessCode" in loginData:
-			if loginData["accessCode"] == accessCode:
+			if loginData["accessCode"] == AccessCodeProvider.accessCode:
 				loginData["role"] = Role.LIBRARIAN
 			else:
 				return self.badRequest("Wrong access code")

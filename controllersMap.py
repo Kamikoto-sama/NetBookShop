@@ -2,11 +2,11 @@ from controllers import AuthController, CustomerController, LibrarianController
 
 class Controllers:
 	Auth = "auth"
-	Customer = "user"
+	Customer = "customer"
 	Librarian = "librarian"
 
 	routes = {
 		"auth": AuthController,
-		"user": CustomerController,
+		"customer": CustomerController,
 		"librarian": LibrarianController
 	}

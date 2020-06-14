@@ -3,9 +3,10 @@ from threading import Thread
 
 from peewee import SqliteDatabase
 
+from accessCodeProvider import AccessCodeProvider
 from clientHandler import ClientHandler
 from logger import Logger
-from models import Request
+from models import Request, ChangesEvent
 
 
 class ServerTerminal(Thread):
@@ -21,10 +22,17 @@ class ServerTerminal(Thread):
 			'send': self.sendMessageToClient,
 			'?': self.showCommands,
 			'request': self.makeRequest,
+			'code': self.getAccessCode,
 		}
+		
+	def getAccessCode(self, generateNew = None):
+		if generateNew is not None:
+			AccessCodeProvider.generateCode()
+		Logger.command(AccessCodeProvider.accessCode)
 
 	def run(self):
 		while self.server.isWorking:
+			Logger.contextPrefix = ""
 			command = input(">")
 			if command == "":
 				continue
@@ -104,14 +112,24 @@ class ServerTerminal(Thread):
 		client: ClientHandler = self.getClient(clientIndex)
 		if client is None:
 			return 
+		def req(params):
+			if "/" in params:
+				Logger.command("Controller name isn't necessary")
+				return
+			controller = client.role
+			action, *body = params.split(" ")
+			self.makeRequest(clientIndex, f"{controller}/{action}", *body)
+		clientInfo = f"#{client.index} {client.role} connected at {client.connectionTime} from {client.address}"
 		commands = {
-			"info": lambda: Logger.command(f"#{client.index} {client.role} {client.connectionTime} {client.address}"),
+			"info": lambda: Logger.command(clientInfo),
 			"send": lambda message: self.sendMessageToClient(clientIndex, "-m" + message),
-			"req": lambda params: self.makeRequest(clientIndex, *(params.split())),
+			"req": req,
 			"?": lambda: [Logger.command(i) for i in commands if i != "?"],
-			"stop": lambda: self.disconnectClient(clientIndex)
+			"-d": lambda: self.disconnectClient(clientIndex),
+			"sync": lambda tables: self.sendChangesEvent(clientIndex, *(tables.split()))
 		}
 		while 1:
+			Logger.contextPrefix = f"client#{clientIndex}"
 			command = input(f"client#{clientIndex}>")
 			commandName, *params = command.split(" ", 1)
 			if commandName == "q" or int(clientIndex) not in self.server.clients:
@@ -125,6 +143,14 @@ class ServerTerminal(Thread):
 				commands[commandName](*params)
 			except Exception as e:
 				Logger.command(e)
+				
+	def sendChangesEvent(self, clientIndex, table, *tables):
+		client: ClientHandler = self.getClient(clientIndex)
+		if client is None:
+			Logger.command("Unknown client")
+			return 
+		changesEvent = ChangesEvent([table, *tables], includeClientId=client.userId)
+		self.server.sendChangesUpdateEvent(changesEvent)
 
 	def listClients(self):
 		clients = self.server.clients.values()
@@ -136,6 +162,7 @@ class ServerTerminal(Thread):
 	def runSql(self):
 		from dataBaseContext import db
 		while 1:
+			Logger.contextPrefix = "sql"
 			query = input("sql>")
 			if query == "q":
 				break
