@@ -12,7 +12,7 @@ class ClientInfo:
 		self.fullAddress = f"{self.ipAddress}:{self.port}"
 		
 class Request:
-	def __init__(self, controller, action, body:dict=None):
+	def __init__(self, controller, action, body=None):
 		self.controller = controller
 		self.action = action
 		self.body = body

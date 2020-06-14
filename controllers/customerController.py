@@ -9,6 +9,21 @@ from repositories.publishersRepository import PublishersRepository
 class CustomerController(BaseController):
 	allowedRole = Role.CUSTOMER
 
+	def getAuthorsAndPublishers(self, tables: list):
+		if len(set(tables) & {"authors", "publishers"}) == 0:
+			return self.badRequest(f"Invalid {tables = }")
+		responseData = {}
+		if "authors" in tables:
+			authors = AuthorsRepository.getAllAuthors()
+			authors = [a["name"] for a in authors]
+			responseData["authors"] = authors
+		if "publishers" in tables:
+			publishers = PublishersRepository.getAllPublishers()
+			publishers = [p["name"] for p in publishers]
+			responseData["publishers"] = publishers
+			
+		return self.ok(responseData)
+
 	def getPublisherByName(self, publisherName):
 		publisher = PublishersRepository.getPublisherByName(publisherName)
 		if publisher is None:
@@ -49,19 +64,24 @@ class CustomerController(BaseController):
 		return self.ok(body=order.book.id)
 	
 	def getBooks(self, filterParams: dict):
-		if "author" in filterParams:
-			author = AuthorsRepository.getAuthorByName(filterParams["author"])
-			if author is None:
-				return self.badRequest(f"Unknown author {filterParams['author']}")
-			filterParams["author"] = author["id"]
-		if "publisher" in filterParams:
-			publisher = PublishersRepository.getPublisherByName(filterParams["publisher"])
-			if publisher is None:
-				return self.badRequest(f"Unknown publisher {filterParams['publisher']}")
-			filterParams["publisher"] = publisher["id"]
+		result = self.replaceNamesToIds(filterParams)
+		if result is not None:
+			return self.ok(body=[])
 		books = BooksRepository.getBooks(filterParams)
 		return self.ok(body=books)
 	
+	def replaceNamesToIds(self, items: dict):
+		if "author" in items:
+			author = AuthorsRepository.getAuthorByName(items["author"])
+			if author is None:
+				return self.badRequest(f"Unknown author {items['author']}")
+			items["author"] = author["id"]
+		if "publisher" in items:
+			publisher = PublishersRepository.getPublisherByName(items["publisher"])
+			if publisher is None:
+				return self.badRequest(f"Unknown publisher {items['publisher']}")
+			items["publisher"] = publisher["id"]
+
 	def getBooksPageData(self):
 		books = BooksRepository.getBooks({})
 		authors = AuthorsRepository.getAllAuthors()

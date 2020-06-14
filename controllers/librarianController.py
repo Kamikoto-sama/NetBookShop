@@ -114,12 +114,13 @@ class LibrarianController(BaseController):
 			BooksRepository.deleteBookById(book["id"])
 	
 	def deleteOrder(self, orderId):
-		book = OrdersRepository.getOrderById(orderId).book
+		order = OrdersRepository.getOrderById(orderId)
+		book, user = order.book, order.user
 		book.count += 1
 		book.save()
 		OrdersRepository.deleteOrderById(orderId)
 		tables = ["orders", "books"]
-		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN], self.userInfo.id, user.id)
 		self.callChangesEvent(changesEvent)
 		return self.ok(tables)
 	

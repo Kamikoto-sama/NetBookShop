@@ -99,5 +99,9 @@ class RequestBuilder:
 			return Request(Controllers.Customer, "getAuthorByName", authorName)
 
 		@staticmethod
+		def getAuthorsAndPublishers(tables: list):
+			return Request(Controllers.Customer, "getAuthorsAndPublishers", tables)
+		
+		@staticmethod
 		def getPublisherByName(publisherName):
 			return Request(Controllers.Customer, "getPublisherByName", publisherName)

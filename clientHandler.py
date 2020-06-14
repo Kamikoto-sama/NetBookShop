@@ -35,7 +35,8 @@ class ClientHandler(Thread):
 			requestParts.append(receivedData.decode(dataPackageEncoding))
 			if receivedData.endswith(dataClosingSequence):
 				requestData = ''.join(requestParts)[:-len(dataClosingSequence)]
-				self.handleRequest(requestData)
+				for singleRequestData in requestData.split(dataClosingSequence.decode(dataPackageEncoding)):
+					self.handleRequest(singleRequestData)
 				requestParts = []
 		if not self.pendedToDisconnect:
 			self.onClientDisconnected(self)

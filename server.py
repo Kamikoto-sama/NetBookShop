@@ -59,7 +59,10 @@ class Server:
 				raise
 		
 	def onClientDisconnected(self, client: ClientHandler):
-		self.clients.pop(client.index)
+		try:
+			self.clients.pop(client.index)
+		except KeyError as e:
+			Logger.log(f"Error {e} clients={self.clients}")
 		Logger.log(f"Client #{client.index} {client.address} has disconnected")
 
 	def stop(self):

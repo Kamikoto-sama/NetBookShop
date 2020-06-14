@@ -2,7 +2,7 @@ from threading import Thread
 
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget, QHeaderView
+from PyQt5.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QTableWidget, QHeaderView, QListWidget
 
 from authorAddingForm import AuthorAddingForm
 from clientWorker import ClientWorker
@@ -21,6 +21,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	orderCanceledEvent = pyqtSignal(object)
 	filteredBooksReceivedEvent = pyqtSignal(object)
 	itemInfoReceivedEvent = pyqtSignal(object)
+	listUpdateReceivedEvent = pyqtSignal(object)
 	def __init__(self, clientWorker: ClientWorker):
 		super().__init__(None, Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
 		self.setupUi(self)
@@ -56,13 +57,15 @@ class CustomerForm(Ui_customerForm, QWidget):
 		self.ordersUpdateBtn.hide()
 		self.booksUpdateBtn.clicked.connect(lambda: self.updateTable("books"))
 		self.ordersUpdateBtn.clicked.connect(lambda: self.updateTable("orders"))
+		self.listsToUpdate = []
+		self.listUpdateReceivedEvent.connect(self.onListUpdateReceived)
 
 		self.configureTables()
 		self.booksTable.itemDoubleClicked.connect(self.showItemInfo)
 		self.itemInfoReceivedEvent.connect(self.onItemInfoReceived)
 		self.authorInfoForm = AuthorAddingForm(self, True)
 		self.publisherInfoForm = PublisherAddingForm(self, True)
-
+		
 	def onItemInfoReceived(self, response: Response):
 		self.processingForm.hide()
 		if not response.succeed:
@@ -96,29 +99,47 @@ class CustomerForm(Ui_customerForm, QWidget):
 		table: QTableWidget = getattr(self, tableName + "Table")
 		self.clearTable(table, tableName)
 		if tableName == "books":
+			self.processingForm.show()
 			self.applyFilter(True)
 			self.booksUpdateBtn.hide()
+			self.updateList()
+			self.processingForm.hide()
 			return 
 		self.ordersTabLoaded = False
 		self.onCurrentTabChanged(1)
+		
+	def onListUpdateReceived(self, response: Response):
+		self.processingForm.hide()
+		if not response.succeed:
+			self.showInvalidOperationMessage(response.errorMessage)
+			return 
+		for listName, items in response.body.items():
+			listWidget: QListWidget = getattr(self, listName + "List")
+			listWidget.clear()
+			listWidget.addItems(["", *items])
+		
+	def updateList(self):
+		if len(self.listsToUpdate) == 0:
+			return 
+		self.processingForm.show()
+		request = RequestBuilder.Customer.getAuthorsAndPublishers(self.listsToUpdate)
+		handle = lambda res: self.listUpdateReceivedEvent.emit(res)
+		self.clientWorker.requestData(request, handle)
 
 	def onChangesReceived(self, response: Response):
-		tables = set(response.body) & set(self.itemsMap)
-		updateMessageTables = []
-		for tableName in tables:
+		for tableName in response.body:
+			if tableName in ["publishers", "authors"]:
+				self.listsToUpdate.append(tableName)
+				tableName = "books"
 			updateBtn = getattr(self, tableName + "UpdateBtn")
-			if updateBtn.isHidden():
-				updateBtn.show()
-				updateMessageTables.append(tableName)
-		if len(updateMessageTables) == 0:
-			return
+			updateBtn.show()
 		# message = f"Some data has changed in: {', '.join(updateMessageTables)}"
 		# QMessageBox().information(self, "Changes update", message)
 
 	def fillFilteredBooks(self, response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		self.clearTable(self.booksTable, "books")
 		self.fillTable(self.booksTable, "books", response.body)
@@ -175,7 +196,7 @@ class CustomerForm(Ui_customerForm, QWidget):
 	def onOrderMade(self, response):
 		self.processingForm.hide()
 		if not response.succeed:
-			self.showInvalidOperationMessage(response.message)
+			self.showInvalidOperationMessage(response.errorMessage)
 			return
 		bookCountCell = self.booksTable.item(self.requestedItemInfo, 5)
 		bookCount = str(int(bookCountCell.text()) - 1)
