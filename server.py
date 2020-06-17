@@ -6,8 +6,9 @@ from logger import Logger
 from models import ClientInfo, ChangesEvent, Response
 
 
-class Server:
-	def __init__(self, address="", port=2000):
+class Server(Thread):
+	def __init__(self, address, port):
+		super().__init__()
 		self.socket = Socket.socket()
 		self.socket.bind((address, port))
 		
@@ -18,10 +19,9 @@ class Server:
 	def isWorking(self):
 		return self.__isWorking
 
-	def start(self):
+	def run(self):
 		self.__isWorking = True
-		Thread(target=self.listenClients).start()
-		return self
+		self.listenClients()
 		
 	def listenClients(self):
 		while self.__isWorking:

@@ -69,6 +69,7 @@ class ClientWorker(Thread):
 		if response.changes:
 			self.onChangesReceived(response)
 		elif len(self.responseQueue) > 0:
-			self.responseQueue.pop(0)(response)
+			callback = self.responseQueue.pop(0)
+			callback(response)
 		else:
 			self.onError(f"Unsupportable response {responseData}")
