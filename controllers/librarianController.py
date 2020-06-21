@@ -33,28 +33,32 @@ class LibrarianController(BaseController):
 	def updatePublishers(self, changesData: str):
 		changesContainer = EntityChanges.fromJson(changesData)
 		changedTables = {"publishers"}
+		roles = [Role.LIBRARIAN]
 		for publisherId, changes in changesContainer.changes.items():
 			PublishersRepository.updatePublisherById(publisherId, changes)
 			books = BooksRepository.getBooksByPublisherId(publisherId)
 			if len(books) > 0 and "name" in changes:
 				changedTables.add("books")
+				roles.append(Role.CUSTOMER)
 
 		changedTables = list(changedTables)
-		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.id)
+		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.id)
 		self.callChangesEvent(changesEvent)
 		return self.ok(changedTables)
 
 	def updateAuthors(self, changesData: str):
 		changesContainer = EntityChanges.fromJson(changesData)
 		changedTables = {"authors"}
+		roles = [Role.LIBRARIAN]
 		for authorId, changes in changesContainer.changes.items():
 			AuthorsRepository.updateAuthorById(authorId, changes)
 			books = BooksRepository.getBooksByAuthorId(authorId)
 			if len(books) > 0 and "name" in changes:
 				changedTables.add("books")
+				roles.append(Role.CUSTOMER)
 
 		changedTables = list(changedTables)
-		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.id)
+		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.id)
 		self.callChangesEvent(changesEvent)
 		return self.ok(changedTables)
 
