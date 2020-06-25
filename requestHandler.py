@@ -5,14 +5,15 @@ from models import Request, UserInfo
 
 
 class RequestHandler:
-	def __init__(self, changesEvent):
+	def __init__(self, changesEvent, clientIndex):
 		self.changesEvent = changesEvent
-		self.userInfo = UserInfo(None, None, None)
+		self.clientIndex = clientIndex
+		self.userInfo = UserInfo(None, clientIndex, None, None)
 		self.currentController = None
 
-	def handle(self, requestData, clientIndex):
+	def handle(self, requestData):
 		request = Request.fromJson(requestData)
-		Logger.log(f"Client #{clientIndex} requested {request.controller}/{request.action}")
+		Logger.log(f"Client #{self.clientIndex} requested {request.controller}/{request.action}")
 		
 		if request.controller not in Controllers.routes:
 			message = f"Unknown controller {request.controller}"

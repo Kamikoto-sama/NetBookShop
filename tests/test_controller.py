@@ -8,7 +8,7 @@ from models import UserInfo, Role
 
 def init():
 	User.delete().where(True).execute()
-	userInfo = UserInfo(None, None, None)
+	userInfo = UserInfo(None, 0, None, None)
 	controller = AuthController(userInfo, lambda *_: None)
 	return controller, userInfo
 

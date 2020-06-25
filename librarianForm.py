@@ -49,8 +49,12 @@ class LibrarianForm(Ui_librarianForm, QWidget):
 		self.filteredBooksReceivedEvent.connect(self.onFilteredBooksReceived)
 		
 		self.booksUpdateBtn.hide()
+		self.authorsUpdateBtn.hide()
+		self.publishersUpdateBtn.hide()
 		self.ordersUpdateBtn.hide()
 		self.booksUpdateBtn.clicked.connect(lambda: self.updateTable("books"))
+		self.authorsUpdateBtn.clicked.connect(lambda: self.updateTable("authors"))
+		self.publishersUpdateBtn.clicked.connect(lambda: self.updateTable("publishers"))
 		self.ordersUpdateBtn.clicked.connect(lambda: self.updateTable("orders"))
 		self.changesReceivedEvent.connect(self.onChangesReceived)
 		clientWorker.onChangesReceived = lambda data: self.changesReceivedEvent.emit(data)

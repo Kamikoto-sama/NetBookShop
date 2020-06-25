@@ -96,5 +96,6 @@ class EntityChanges:
 @dataclass
 class UserInfo:
 	id: int
+	clientIndex: int
 	login: str
 	role: str

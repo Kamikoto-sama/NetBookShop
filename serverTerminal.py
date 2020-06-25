@@ -154,7 +154,8 @@ class ServerTerminal(Thread):
 
 	def listClients(self):
 		clients = self.server.clients.values()
-		Logger.command("Connected clients:" if len(clients) > 0 else "No clients connected")
+		message = f"Connected clients {len(clients)}:" if len(clients) > 0 else "No clients connected"
+		Logger.command(message)
 		for client in clients:
 			message = f"#{client.index} {client.role} connected at {client.connectionTime} from {client.address}"
 			Logger.command(message)

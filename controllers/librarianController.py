@@ -11,13 +11,13 @@ class LibrarianController(BaseController):
 
 	def addPublisher(self, publisherData: dict):
 		PublishersRepository.addPublisher(publisherData)
-		changesEvent = ChangesEvent(["publishers"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.id)
+		changesEvent = ChangesEvent(["publishers"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok()
 	
 	def addAuthor(self, authorData: dict):
 		AuthorsRepository.addAuthor(authorData)
-		changesEvent = ChangesEvent(["authors"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.id)
+		changesEvent = ChangesEvent(["authors"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok()
 	
@@ -26,7 +26,7 @@ class LibrarianController(BaseController):
 		if result is not None:
 			return result
 		book = BooksRepository.addBook(bookData)
-		changesEvent = ChangesEvent(["books"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.id)
+		changesEvent = ChangesEvent(["books"], [Role.CUSTOMER, Role.LIBRARIAN], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(book)
 
@@ -42,7 +42,7 @@ class LibrarianController(BaseController):
 				roles.append(Role.CUSTOMER)
 
 		changedTables = list(changedTables)
-		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.id)
+		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(changedTables)
 
@@ -58,7 +58,7 @@ class LibrarianController(BaseController):
 				roles.append(Role.CUSTOMER)
 
 		changedTables = list(changedTables)
-		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.id)
+		changesEvent = ChangesEvent(changedTables, roles, exceptClientId=self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(changedTables)
 
@@ -75,7 +75,7 @@ class LibrarianController(BaseController):
 			BooksRepository.updateBookById(bookId, changes)
 
 		changedTables = list(changedTables)
-		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.id)
+		changesEvent = ChangesEvent(changedTables, [Role.CUSTOMER, Role.LIBRARIAN], exceptClientId=self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(changedTables)
 	
@@ -93,7 +93,7 @@ class LibrarianController(BaseController):
 		self.cascadeDelete(books, tables)
 		PublishersRepository.deletePublisherById(publisherId)
 		tables = list(tables)
-		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(tables)
 	
@@ -103,7 +103,7 @@ class LibrarianController(BaseController):
 		self.cascadeDelete(books, tables)
 		AuthorsRepository.deleteAuthorById(authorId)
 		table = list(tables)
-		changesEvent = ChangesEvent(table, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		changesEvent = ChangesEvent(table, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(table)
 	
@@ -124,7 +124,7 @@ class LibrarianController(BaseController):
 		book.save()
 		OrdersRepository.deleteOrderById(orderId)
 		tables = ["orders", "books"]
-		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN], self.userInfo.id, user.id)
+		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN], self.userInfo.clientIndex, user.id)
 		self.callChangesEvent(changesEvent)
 		return self.ok(tables)
 	
@@ -135,7 +135,7 @@ class LibrarianController(BaseController):
 		for order in orders:
 			OrdersRepository.deleteOrderById(order["id"])
 			tables.append("orders")
-		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.id)
+		changesEvent = ChangesEvent(tables, [Role.LIBRARIAN, Role.CUSTOMER], self.userInfo.clientIndex)
 		self.callChangesEvent(changesEvent)
 		return self.ok(tables)
 

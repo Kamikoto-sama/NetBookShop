@@ -14,18 +14,18 @@ class ClientHandler(Thread):
 		self.address = clientInfo.fullAddress 
 		self.index = clientIndex
 		self.connectionTime = datetime.now().strftime(timeFormat)
-		self.requestHandler = RequestHandler(changesEvent)
+		self.requestHandler = RequestHandler(changesEvent, clientIndex)
 		self.onClientDisconnected = lambda *_: None
 		self.pendedToDisconnect = False
 		
 	@property
 	def role(self):
 		return self.requestHandler.userInfo.role
-		
+
 	@property
 	def userId(self):
 		return self.requestHandler.userInfo.id
-		
+	
 	def disconnect(self):
 		self.connection.close()
 		
@@ -49,7 +49,7 @@ class ClientHandler(Thread):
 			return 0
 
 	def handleRequest(self, requestData):
-		response = self.requestHandler.handle(requestData, self.index)
+		response = self.requestHandler.handle(requestData)
 		self.respond(response.toJson())
 
 	def respond(self, data: str):

@@ -14,6 +14,7 @@ class Server(Thread):
 		
 		self.__isWorking = False
 		self.clients = {}
+		self.clientIndex = 0
 
 	@property
 	def isWorking(self):
@@ -32,19 +33,20 @@ class Server(Thread):
 			self.serveClient(clientInfo)
 			
 	def serveClient(self, clientInfo: ClientInfo):
-		clientIndex = len(self.clients)
-		clientHandler = ClientHandler(clientInfo, clientIndex, self.sendChangesUpdateEvent)
-		self.clients[clientIndex] = clientHandler
+		clientHandler = ClientHandler(clientInfo, self.clientIndex, self.sendChangesUpdateEvent)
+		self.clients[self.clientIndex] = clientHandler
+		self.clientIndex += 1
 		clientHandler.onClientDisconnected = self.onClientDisconnected
 		clientHandler.start()
 
 		Logger.log(f"Client #{clientHandler.index} {clientHandler.address} has connected")
 	
 	def sendChangesUpdateEvent(self, updateEvent: ChangesEvent):
+		client: ClientHandler
 		for client in self.clients.values():
 			condition = not client.role in updateEvent.roles
 			condition = condition and client.userId != updateEvent.includeClientId
-			condition = condition or client.userId == updateEvent.exceptClientId
+			condition = condition or client.index == updateEvent.exceptClientId
 			if condition:
 				continue
 			response = Response(True, "", updateEvent.tables, True)
