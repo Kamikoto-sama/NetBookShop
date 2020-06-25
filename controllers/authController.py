@@ -7,7 +7,7 @@ from repositories import UserRepository
 class AuthController(BaseController):
 	def register(self, loginData: dict):
 		if not self.validateData(loginData, {"login", "password"}):
-			return self.badRequest("Invalid input data")
+			return self.badRequest("Invalid data")
 		if UserRepository.findUserByLogin(loginData["login"]) is not None:
 			return self.badRequest("This login has already registered")
 		if "accessCode" in loginData:
@@ -17,7 +17,7 @@ class AuthController(BaseController):
 				return self.badRequest("Wrong access code")
 		user = UserRepository.registerUser(loginData)
 		self.updateUserInfo(user)
-		return self.ok(body={"role":user.role})
+		return self.ok(body=user.role)
 	
 	def login(self, loginData: dict):
 		if not self.validateData(loginData, {"login", "password"}):
@@ -29,7 +29,7 @@ class AuthController(BaseController):
 			return self.badRequest("Invalid password")			
 		
 		self.updateUserInfo(user)
-		return self.ok(body={"role":user.role})
+		return self.ok(body=user.role)
 	
 	def updateUserInfo(self, user: User):
 		self.userInfo.login = user.login

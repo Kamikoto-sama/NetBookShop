@@ -86,7 +86,7 @@ class AuthForm(Ui_AuthorizationForm, QWidget):
 			message = response.errorMessage
 			QMessageBox().warning(self, title, message)
 			return
-		self.onAuthorized(response.body["role"])
+		self.onAuthorized(response.body)
 
 	def validateLoginData(self):
 		title = "Invalid login data"
