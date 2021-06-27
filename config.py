@@ -1,5 +1,5 @@
 # Server settings
-appAddress = "localhost"#"192.168.0.108"
+appAddress = "localhost"
 appPort = 2000
 dataClosingSequence = b"\r\n\r\n"
 dataPackageSize = 1024
